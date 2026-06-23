@@ -1,8 +1,5 @@
 package com.example.demo.model;
 
-
-import org.apache.catalina.User;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -28,7 +25,9 @@ public class Pet {
     @JoinColumn(name = "shelter_id")
     private Shelter shelter;
 
-    
+    private boolean availa
+
+
 
 
     
