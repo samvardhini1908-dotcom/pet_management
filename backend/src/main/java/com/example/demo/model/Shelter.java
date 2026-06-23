@@ -13,6 +13,9 @@ public class Shelter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String shelterName;
+    private String location;
+    private int capacity;
     
     
     
