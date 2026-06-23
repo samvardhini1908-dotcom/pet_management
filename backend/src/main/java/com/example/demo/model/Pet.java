@@ -4,6 +4,8 @@ package com.example.demo.model;
 import org.apache.catalina.User;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,7 +19,13 @@ public class Pet {
     private int age;
     private String gender;
     private String imageUrl;
-    private User 
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User owner;
+
+    @Ma
+
 
     
 }
