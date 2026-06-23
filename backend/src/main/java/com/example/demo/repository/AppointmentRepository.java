@@ -8,7 +8,8 @@ import com.example.demo.model.Appointment;
 import com.example.demo.model.User;
 
 public interface AppointmentRepository extends JpaRepository<Appointment,Long>{
-    List<Appointment>findByVeterinarian(User veter)
+    List<Appointment>findByVeterinarian(User veterinarian);
+    List<Appointment>findByPetOwnerId(Long ownerId);
 
     
 }

@@ -1,5 +1,11 @@
 package com.example.demo.repository;
 
-public class MedicalRecordRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.demo.model.MedicalRecord;
+
+public interface MedicalRecordRepository extends JpaRepository<MedicalRecord,Long>{
+    
+
     
 }
