@@ -6,9 +6,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = shelters)
+@Table(name = "shelters")
 public class Shelter {
     @Id
-    @GeneratedValue(strategy = )
+    @GeneratedValue(strategy = GenerationType.)
     
 }
