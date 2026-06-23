@@ -1,5 +1,8 @@
 package com.example.demo.repository;
 
-public class AdoptionRequestRepository {
+public interface AdoptionRequestRepository {
+
+    
+} AdoptionRequestRepository {
     
 }
