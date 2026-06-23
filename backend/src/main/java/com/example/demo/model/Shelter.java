@@ -16,6 +16,39 @@ public class Shelter {
     private String shelterName;
     private String location;
     private int capacity;
+    public Shelter() {
+    }
+    public Shelter(Long id, String shelterName, String location, int capacity) {
+        this.id = id;
+        this.shelterName = shelterName;
+        this.location = location;
+        this.capacity = capacity;
+    }
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getShelterName() {
+        return shelterName;
+    }
+    public void setShelterName(String shelterName) {
+        this.shelterName = shelterName;
+    }
+    public String getLocation() {
+        return location;
+    }
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    public int getCapacity() {
+        return capacity;
+    }
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
     
     
     
