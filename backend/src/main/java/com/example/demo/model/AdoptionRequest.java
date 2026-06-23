@@ -25,5 +25,7 @@ public class AdoptionRequest {
     @ManyToOne
     @JoinColumn(name = "pet_id")
     private Pet pet;
+
+    
     
 }
