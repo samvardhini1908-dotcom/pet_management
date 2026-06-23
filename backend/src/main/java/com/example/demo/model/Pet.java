@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+
+import org.apache.catalina.User;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -14,7 +17,7 @@ public class Pet {
     private int age;
     private String gender;
     private String imageUrl;
-    private 
+    private User 
 
     
 }
