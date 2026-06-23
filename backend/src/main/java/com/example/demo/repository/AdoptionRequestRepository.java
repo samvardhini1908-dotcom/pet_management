@@ -1,8 +1,8 @@
 package com.example.demo.repository;
 
-public interface AdoptionRequestRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AdoptionRequestRepository extends JpaRepository<id,> {
 
     
-} AdoptionRequestRepository {
-    
-}
+} 
