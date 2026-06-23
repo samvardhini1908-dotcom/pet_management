@@ -24,7 +24,11 @@ public class Pet {
     @JoinColumn(name = "user_id")
     private User owner;
 
-    @Ma
+    @ManyToOne
+    @JoinColumn(name = "shelter_id")
+    private Shelter shelter;
+
+    
 
 
     
