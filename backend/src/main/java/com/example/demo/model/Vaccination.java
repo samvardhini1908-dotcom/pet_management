@@ -25,6 +25,20 @@ public class Vaccination {
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
+    public Vaccination() {
+    }
+
+    public Vaccination(Long id, String vaccineName, LocalDate vaccinationDate, LocalDate nextDueDate, String status,
+            Pet pet) {
+        this.id = id;
+        this.vaccineName = vaccineName;
+        this.vaccinationDate = vaccinationDate;
+        this.nextDueDate = nextDueDate;
+        this.status = status;
+        this.pet = pet;
+    }
+
+    
 
     
 }
