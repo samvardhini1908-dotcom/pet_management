@@ -35,6 +35,73 @@ public class MedicalRecord {
     public MedicalRecord() {
     }
 
+    public MedicalRecord(Long id, String diagnosis, String prescription, LocalDate visitDate, String status,
+            User veterinarian, Pet pet) {
+        this.id = id;
+        this.diagnosis = diagnosis;
+        this.prescription = prescription;
+        this.visitDate = visitDate;
+        this.status = status;
+        this.veterinarian = veterinarian;
+        this.pet = pet;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getDiagnosis() {
+        return diagnosis;
+    }
+
+    public void setDiagnosis(String diagnosis) {
+        this.diagnosis = diagnosis;
+    }
+
+    public String getPrescription() {
+        return prescription;
+    }
+
+    public void setPrescription(String prescription) {
+        this.prescription = prescription;
+    }
+
+    public LocalDate getVisitDate() {
+        return visitDate;
+    }
+
+    public void setVisitDate(LocalDate visitDate) {
+        this.visitDate = visitDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public User getVeterinarian() {
+        return veterinarian;
+    }
+
+    public void setVeterinarian(User veterinarian) {
+        this.veterinarian = veterinarian;
+    }
+
+    public Pet getPet() {
+        return pet;
+    }
+
+    public void setPet(Pet pet) {
+        this.pet = pet;
+    }
+
     
 
     
