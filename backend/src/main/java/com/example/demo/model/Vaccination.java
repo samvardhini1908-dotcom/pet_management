@@ -3,6 +3,8 @@ package com.example.demo.model;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Vaccination {
@@ -11,6 +13,11 @@ public class Vaccination {
     private LocalDate vaccinationDate;
     private LocalDate nextDueDate;
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "pet_id")
     private Pet pet;
+
+    
     
 }
