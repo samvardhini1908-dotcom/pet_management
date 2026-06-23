@@ -28,11 +28,19 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    
+
     private String fullName;
+
+    @Column(nullable = false)
     private String email;
+
     private String phone;
 
+    public enum Role{
+        ROLE_ADMIN;
+        ROLE_OWNER;
+        ROLE_
+    }
 
     
 }
