@@ -8,7 +8,9 @@ public class User {
     @Id
     private long id;
 
-    private 
+    private String username;
+    private String password;
+     
 
     
 }
