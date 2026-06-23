@@ -1,6 +1,5 @@
 package com.example.demo.model;
 
-import javax.management.relation.Role;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -11,8 +10,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +36,25 @@ public class User {
     private String email;
 
     private String phone;
+
+    
+
+    public User() {
+    }
+
+
+    
+    public User(Long id, String username, String password, Role role, String fullName, String email, String phone) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.fullName = fullName;
+        this.email = email;
+        this.phone = phone;
+    }
+
+
 
     public enum Role{
         ROLE_ADMIN,
