@@ -24,7 +24,10 @@ public class PetService {
         return repo.findById(id);
     }
 
-    public 
+    public List<Pet>getPetsByOwner(String username)
+    {
+        
+    }
 
 
     
