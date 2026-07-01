@@ -15,7 +15,9 @@ public class PetService {
     @Autowired
     PetRepository repo;
 
-    public List<Pet>
+    public List<Pet>getAllPets(){
+        return repo.findAll();
+    }
 
 
     
