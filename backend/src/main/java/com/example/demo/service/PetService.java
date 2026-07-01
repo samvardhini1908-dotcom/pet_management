@@ -29,7 +29,9 @@ public class PetService {
     //     return repo.findByOwner(null);
     // }
 
-    public List<Pet>getPetsForAdoption()
+    // public List<Pet>getPetsForAdoption(){
+
+    // }
 
 
     
