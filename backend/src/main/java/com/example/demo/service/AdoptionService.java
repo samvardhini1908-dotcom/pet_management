@@ -14,13 +14,16 @@ import com.example.demo.repository.AdoptionRequestRepository;
 public class AdoptionService {
 
     @Autowired
-    AdoptionRequestRepository repo;
+    AdoptionRequestRepository AdoptionRequestRepository;
 
     List<AdoptionRequest> getAllRequests()
     {
-        return repo.findAll();
+        return a.findAll();
     }
 
-    AdoptionRequest createRequest(AdoptionRequest)
+    AdoptionRequest createRequest(AdoptionRequest request)
+    {
+        return repo.
+    }
     
 }
