@@ -24,14 +24,14 @@ public class PetService {
         return repo.findById(id);
     }
 
-    // public List<Pet>getPetsByOwner(String username)
-    // {
-    //     return repo.findByOwner(null);
-    // }
+    public List<Pet>getPetsByOwner(String username)
+    {
+        return repo.findByOwner(null);
+    }
 
-    // public List<Pet>getPetsForAdoption(){
+    public List<Pet>getPetsForAdoption(){
 
-    // }
+    }
 
 
     
