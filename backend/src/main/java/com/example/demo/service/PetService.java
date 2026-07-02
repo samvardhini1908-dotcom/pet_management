@@ -26,7 +26,7 @@ public class PetService {
 
     public List<Pet>getPetsByOwner(String username)
     {
-        return repo.findByOwner(null);
+        return repo.findByOwner(username);
     }
 
     public List<Pet>getPetsForAdoption(){
