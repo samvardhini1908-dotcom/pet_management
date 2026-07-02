@@ -34,9 +34,9 @@ public class VaccinationService {
         vaccinationRepository.deleteById(id);
     }
 
-    public List<Vaccination>getUpcomingRemainders()
+    public List<Vaccination>getUpcomingReminders()
     {
-        
+
     }
     
 }
