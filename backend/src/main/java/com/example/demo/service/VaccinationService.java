@@ -29,6 +29,11 @@ public class VaccinationService {
         return vaccinationRepository.save(vaccination);
     }
 
-    
+    public void deleteVaccination(Long id)
+    {
+        vaccinationRepository.deleteById(id);
+    }
+
+    public List<Vaccination>getUpcomingRemainders()
     
 }
