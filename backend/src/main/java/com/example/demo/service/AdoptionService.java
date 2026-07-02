@@ -31,10 +31,10 @@ public class AdoptionService {
         return AdoptionRequestRepository.save(request);
     }
 
-    AdoptionRequest updateRequestStatus(Long id,String status)
-    {
-        
-    }
+    // AdoptionRequest updateRequestStatus(Long id,String status)
+    // {
+
+    // }
 
     List<Shelter> getAllShelters()
     {
