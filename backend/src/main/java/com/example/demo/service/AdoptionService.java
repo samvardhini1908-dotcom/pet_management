@@ -28,6 +28,7 @@ public class AdoptionService {
 
     AdoptionRequest createRequest(AdoptionRequest request)
     {
+        request.setStatus(null);
         return AdoptionRequestRepository.save(request);
     }
 
