@@ -34,7 +34,7 @@ public class AdoptionService {
 
     AdoptionRequest updateRequestStatus(Long id,String status)
     {
-        
+        OptAdoptionRequest request=AdoptionRequestRepository.findById(id);
     }
 
     List<Shelter> getAllShelters()
