@@ -39,7 +39,10 @@ public class PetService {
         return repo.save(pet);
     }
 
-    public void de
+    public void deletePet(Long id)
+    {
+        return repo
+    }
 
 
     
