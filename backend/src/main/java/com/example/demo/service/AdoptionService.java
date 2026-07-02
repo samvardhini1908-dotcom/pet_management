@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,11 @@ public class AdoptionService {
 
     AdoptionRequest updateRequestStatus(Long id,String status)
     {
-        OptAdoptionRequest request=AdoptionRequestRepository.findById(id);
+        Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
+        AdoptionRequest ans=request.get();
+        ans.
+
+        
     }
 
     List<Shelter> getAllShelters()
