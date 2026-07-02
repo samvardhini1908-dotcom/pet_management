@@ -37,6 +37,7 @@ public class AdoptionService {
     {
         Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
         AdoptionRequest ans=request.get();
+        ans.setStatus("APPROVED");
         ans.
 
         
