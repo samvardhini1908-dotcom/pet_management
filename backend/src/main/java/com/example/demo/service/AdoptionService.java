@@ -33,15 +33,15 @@ public class AdoptionService {
         return AdoptionRequestRepository.save(request);
     }
 
-    AdoptionRequest updateRequestStatus(Long id,String status)
-    {
-        Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
-        AdoptionRequest ans=request.get();
-        ans.setStatus("APPROVED");
-        ans.
+    // AdoptionRequest updateRequestStatus(Long id,String status)
+    // {
+    //     Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
+    //     AdoptionRequest ans=request.get();
+    //     ans.setStatus("APPROVED");
+    //     ans.
 
         
-    }
+    // }
 
     List<Shelter> getAllShelters()
     {
