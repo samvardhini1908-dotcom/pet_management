@@ -26,22 +26,22 @@ public class PetService {
 
     public List<Pet>getPetsByOwner(String username)
     {
-        return repo.findByOwner(username);
+        return petRepository.findByOwner(username);
     }
 
     public List<Pet>getPetsForAdoption(){
-        return repo.findByAvailableForAdoptionTrue();
+        return petRepository.findByAvailableForAdoptionTrue();
 
     }
 
     public Pet savePet(Pet pet)
     {
-        return repo.save(pet);
+        return petRepository.save(pet);
     }
 
     public void deletePet(Long id)
     {
-        repo.deleteById(id);
+        petRepository.deleteById(id);
     }
 
 
