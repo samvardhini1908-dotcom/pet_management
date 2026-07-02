@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.AdoptionRequest;
+import com.example.demo.model.Shelter;
 import com.example.demo.repository.AdoptionRequestRepository;
+import com.example.demo.repository.ShelterRepository;
 
 @Service
 @Transactional
@@ -15,6 +17,9 @@ public class AdoptionService {
 
     @Autowired
     AdoptionRequestRepository AdoptionRequestRepository;
+
+    @Autowired
+    ShelterRepository ShelterRepository;
 
     List<AdoptionRequest> getAllRequests()
     {
@@ -25,5 +30,12 @@ public class AdoptionService {
     {
         return AdoptionRequestRepository.save(request);
     }
+
+    List<Shelter> getAllShelters()
+    {
+        return ShelterRepository.findAll();
+    }
+
+    
     
 }
