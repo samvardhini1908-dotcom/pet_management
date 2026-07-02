@@ -28,14 +28,14 @@ public class AdoptionService {
 
     AdoptionRequest createRequest(AdoptionRequest request)
     {
-        request.setStatus(null);
+        request.setStatus("PENDING");
         return AdoptionRequestRepository.save(request);
     }
 
-    // AdoptionRequest updateRequestStatus(Long id,String status)
-    // {
-
-    // }
+    AdoptionRequest updateRequestStatus(Long id,String status)
+    {
+        
+    }
 
     List<Shelter> getAllShelters()
     {
