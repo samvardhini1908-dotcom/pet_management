@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.model.Pet;
 import com.example.demo.model.Vaccination;
 import com.example.demo.repository.VaccinationRepository;
 
@@ -18,6 +19,16 @@ public class VaccinationService {
         return vaccinationRepository.findAll();
     }
 
-    public List<Vaccination>getVaccinationsBy
+    public List<Vaccination>getVaccinationsByPet(Pet pet)
+    {
+        return vaccinationRepository.findByPet(pet);
+    }
+
+    public Vaccination saveVaccination(Vaccination vaccination)
+    {
+        return vaccinationRepository.save(vaccination);
+    }
+
+    
     
 }
