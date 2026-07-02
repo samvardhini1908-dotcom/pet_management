@@ -34,7 +34,12 @@ public class PetService {
 
     }
 
-    public Pet 
+    public Pet savePet(Pet pet)
+    {
+        return repo.save(pet);
+    }
+
+    public void de
 
 
     
