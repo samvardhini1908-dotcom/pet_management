@@ -18,12 +18,12 @@ public class AdoptionService {
 
     List<AdoptionRequest> getAllRequests()
     {
-        return a.findAll();
+        return AdoptionRequestRepository.findAll();
     }
 
     AdoptionRequest createRequest(AdoptionRequest request)
     {
-        return repo.
+        return AdoptionRequestRepository.save(request);
     }
     
 }
