@@ -30,8 +30,11 @@ public class PetService {
     }
 
     public List<Pet>getPetsForAdoption(){
+        return repo.findByAvailableForAdoptionTrue();
 
     }
+
+    public Pet 
 
 
     
