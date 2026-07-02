@@ -16,6 +16,11 @@ public class AdoptionService {
     @Autowired
     AdoptionRequestRepository repo;
 
-    List<AdoptionRequest>
+    List<AdoptionRequest> getAllRequests()
+    {
+        return repo.findAll();
+    }
+
+    AdoptionRequest createRequest(AdoptionRequest)
     
 }
