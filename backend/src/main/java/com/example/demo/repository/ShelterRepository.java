@@ -10,7 +10,7 @@ import com.example.demo.model.Shelter;
 @Repository
 public interface ShelterRepository extends JpaRepository<Shelter,Long>{
     List<Shelter> findAll();
-    
+    Optional<Shelter> findById(Long id);
 
     
 } 
