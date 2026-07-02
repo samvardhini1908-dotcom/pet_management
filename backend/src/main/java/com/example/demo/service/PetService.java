@@ -14,14 +14,14 @@ import com.example.demo.repository.PetRepository;
 @Transactional
 public class PetService {
     @Autowired
-    PetRepository repo;
+    PetRepository petRepository;
 
     public List<Pet>getAllPets(){
-        return repo.findAll();
+        return petRepository.findAll();
     }
 
     public Optional<Pet>getPetById(Long id){
-        return repo.findById(id);
+        return petRepository.findById(id);
     }
 
     public List<Pet>getPetsByOwner(String username)
@@ -41,7 +41,7 @@ public class PetService {
 
     public void deletePet(Long id)
     {
-        return repo
+        repo.deleteById(id);
     }
 
 
