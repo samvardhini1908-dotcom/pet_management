@@ -61,15 +61,15 @@ public class AdoptionService {
         return shelterRepository.findAll();
     }
 
-    boolean canShelterAcceptPet(Long shelterId)
-    {
-        Optional<Shelter>res=shelterRepository.findById(shelterId);
+    // boolean canShelterAcceptPet(Long shelterId)
+    // {
+    //     Optional<Shelter>res=shelterRepository.findById(shelterId);
 
-        if(res.isPresent()){
-            Shelter shelter=res.get();
-            long count=pet
-        }
-    }
+    //     if(res.isPresent()){
+    //         Shelter shelter=res.get();
+    //         long count
+    //     }
+    // }
 
 
     
