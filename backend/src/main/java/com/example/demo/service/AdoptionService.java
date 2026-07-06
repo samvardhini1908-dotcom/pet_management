@@ -44,7 +44,7 @@ public class AdoptionService {
 
             request.setStatus(conversionStatus);
 
-            if("APPROVED".equals(conversionStatus)){
+            if(AdoptionRequest.STATUS.APPROVED.equals(conversionStatus)){
                 if(request.getPet()!=null){
                     request.getPet().setAvailableForAdoption(false);
                 }
