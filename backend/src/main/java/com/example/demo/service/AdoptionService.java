@@ -29,7 +29,7 @@ public class AdoptionService {
 
     AdoptionRequest createRequest(AdoptionRequest request)
     {
-        request.setStatus("PENDING");
+        request.setStatus();
         return AdoptionRequestRepository.save(request);
     }
 
