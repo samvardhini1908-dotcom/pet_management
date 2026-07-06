@@ -19,6 +19,9 @@ public class AdoptionRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate requestDate;
+    
+
+
     @Enumerated(EnumType.STRING)
     private String status;
     @ManyToOne
