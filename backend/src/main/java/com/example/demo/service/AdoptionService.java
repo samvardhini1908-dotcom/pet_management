@@ -40,6 +40,8 @@ public class AdoptionService {
 
             AdoptionRequest request=ans.get();
 
+            Adop
+
             request.setStatus(status);
 
             if("APPROVED".equals(status)){
