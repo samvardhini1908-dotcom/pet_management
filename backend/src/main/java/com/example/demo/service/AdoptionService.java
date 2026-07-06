@@ -20,7 +20,7 @@ public class AdoptionService {
     AdoptionRequestRepository AdoptionRequestRepository;
 
     @Autowired
-    ShelterRepository ShelterRepository;
+    ShelterRepository shelterRepository;
 
     List<AdoptionRequest> getAllRequests()
     {
@@ -58,12 +58,17 @@ public class AdoptionService {
 
     List<Shelter> getAllShelters()
     {
-        return ShelterRepository.findAll();
+        return shelterRepository.findAll();
     }
 
     boolean canShelterAcceptPet(Long shelterId)
     {
         Optional<Shelter>res=shelterRepository.findById(shelterId);
+
+        if(res.isPresent()){
+            Shelter shelter=res.get();
+            long count=pet
+        }
     }
 
 
