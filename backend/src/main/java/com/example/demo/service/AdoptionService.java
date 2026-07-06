@@ -29,19 +29,19 @@ public class AdoptionService {
 
     AdoptionRequest createRequest(AdoptionRequest request)
     {
-        request.setStatus();
+        request.setStatus(AdoptionRequest.STATUS.PENDING);
         return AdoptionRequestRepository.save(request);
     }
 
-    // AdoptionRequest updateRequestStatus(Long id,String status)
-    // {
-    //     Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
-    //     AdoptionRequest ans=request.get();
-    //     ans.setStatus("APPROVED");
-    //     ans.
+    AdoptionRequest updateRequestStatus(Long id,String status)
+    {
+        Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
+        AdoptionRequest ans=request.get();
+        ans.setStatus(AdoptionRequest.STATUS.APPROVED);
+        ans.
 
         
-    // }
+    }
 
     List<Shelter> getAllShelters()
     {
