@@ -40,11 +40,11 @@ public class AdoptionService {
 
             AdoptionRequest request=ans.get();
 
-            Adop
+            AdoptionRequest.STATUS conversionStatus=AdoptionRequest.STATUS.valueOf(status.toUpperCase());
 
-            request.setStatus(status);
+            request.setStatus(conversionStatus);
 
-            if("APPROVED".equals(status)){
+            if("APPROVED".equals(conversionStatus)){
                 if(request.getPet()!=null){
                     request.getPet().setAvailableForAdoption(false);
                 }
