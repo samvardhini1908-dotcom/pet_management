@@ -4,15 +4,25 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "medical_records")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class MedicalRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +32,14 @@ public class MedicalRecord {
     @Column(length = 1000)
     private String prescription;
     private LocalDate visitDate;
-    private String status;
+
+    public enum STATUS{
+        PENDING,
+        APPROVED
+    }
+
+    @Enumerated(EnumType.STRING)
+    private STATUS status;
 
     @ManyToOne
     @JoinColumn(name = "vet_id")
@@ -32,21 +49,7 @@ public class MedicalRecord {
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
-    public MedicalRecord() {
-    }
 
-    public MedicalRecord(Long id, String diagnosis, String prescription, LocalDate visitDate, String status,
-            User veterinarian, Pet pet) {
-        this.id = id;
-        this.diagnosis = diagnosis;
-        this.prescription = prescription;
-        this.visitDate = visitDate;
-        this.status = status;
-        this.veterinarian = veterinarian;
-        this.pet = pet;
-    }
-
-    
 
     
 }
