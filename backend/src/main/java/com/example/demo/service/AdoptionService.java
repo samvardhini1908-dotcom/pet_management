@@ -35,7 +35,14 @@ public class AdoptionService {
 
     AdoptionRequest updateRequestStatus(Long id,String status)
     {
-        Optional<AdoptionRequest> request=AdoptionRequestRepository.findById(id);
+        Optional<AdoptionRequest> ans=AdoptionRequestRepository.findById(id);
+        if(ans.isPresent()){
+            request.setStatus(status);
+
+            if
+
+        }
+        
         AdoptionRequest ans=request.get();
         ans.setStatus(AdoptionRequest.STATUS.APPROVED);
         ans.set
