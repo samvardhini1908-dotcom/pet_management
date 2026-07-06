@@ -19,6 +19,7 @@ public class Vaccination {
     private String vaccineName;
     private LocalDate vaccinationDate;
     private LocalDate nextDueDate;
+    
     private String status;
 
     @ManyToOne
