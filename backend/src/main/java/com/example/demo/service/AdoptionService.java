@@ -37,20 +37,19 @@ public class AdoptionService {
     {
         Optional<AdoptionRequest> ans=AdoptionRequestRepository.findById(id);
         if(ans.isPresent()){
+
+            AdoptionRequest request=ans.get();
+
             request.setStatus(status);
 
             if("APPROVED".equals(status)){
                 if(request.getPet()!=null){
-                    request.getPet().setAvailable
+                    request.getPet().setAvailableForAdoption(false);
                 }
             }
+            return AdoptionRequestRepository.save(request);
 
         }
-        
-        AdoptionRequest ans=request.get();
-        ans.setStatus(AdoptionRequest.STATUS.APPROVED);
-        ans.set
-
         
     }
 
