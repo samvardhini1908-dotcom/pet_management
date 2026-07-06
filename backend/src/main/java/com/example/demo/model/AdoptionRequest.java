@@ -19,7 +19,11 @@ public class AdoptionRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate requestDate;
-    
+    public enum STATUS{
+        PENDING,
+        APPROVED,
+        REJECTED
+    }
 
 
     @Enumerated(EnumType.STRING)
