@@ -48,6 +48,8 @@ public class AdoptionService {
         return ShelterRepository.findAll();
     }
 
+    
+
 
     
 }
