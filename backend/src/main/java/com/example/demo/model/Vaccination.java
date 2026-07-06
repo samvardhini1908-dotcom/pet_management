@@ -3,6 +3,8 @@ package com.example.demo.model;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,8 +21,14 @@ public class Vaccination {
     private String vaccineName;
     private LocalDate vaccinationDate;
     private LocalDate nextDueDate;
-    
-    private String status;
+    public enum STATUS{
+        COMPLETED,
+        PENDING,
+        OVERDUE
+    }
+
+    @Enumerated(EnumType.STRING)
+    private STATUS status;
 
     @ManyToOne
     @JoinColumn(name = "pet_id")
