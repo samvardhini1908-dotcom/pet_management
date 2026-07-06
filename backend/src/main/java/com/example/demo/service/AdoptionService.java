@@ -52,6 +52,7 @@ public class AdoptionService {
             return AdoptionRequestRepository.save(request);
 
         }
+        return null;
         
     }
 

@@ -108,40 +108,6 @@ public class Pet {
         return imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-
-    public Shelter getShelter() {
-        return shelter;
-    }
-
-    public void setShelter(Shelter shelter) {
-        this.shelter = shelter;
-    }
-
-    public boolean isAvailableForAdoption() {
-        return availableForAdoption;
-    }
-
-    public void setAvailableForAdoption(boolean availableForAdoption) {
-        this.availableForAdoption = availableForAdoption;
-    }
-
-    
-
-
-
-
-
 
     
 }
