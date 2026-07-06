@@ -61,7 +61,7 @@ public class AdoptionService {
         return ShelterRepository.findAll();
     }
 
-    
+    boolean can
 
 
     
