@@ -39,7 +39,11 @@ public class AdoptionService {
         if(ans.isPresent()){
             request.setStatus(status);
 
-            if
+            if("APPROVED".equals(status)){
+                if(request.getPet()!=null){
+                    request.getPet().setAvailable
+                }
+            }
 
         }
         
