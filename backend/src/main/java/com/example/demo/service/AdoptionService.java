@@ -70,16 +70,19 @@ public class AdoptionService {
     {
         Optional<Shelter> ans=shelterRepository.findById(shelterId);
 
-        if(ans.isPresent()){
+        // if(ans.isPresent()){
             Shelter shelter=ans.get();
             shelter.getCapacity();
 
             List<Pet> count = petRepository.findAll();
         
-            if(count < (shelter.getCapacity())){
+            if(count.size() < (shelter.getCapacity())){
                 return true;
             }
-        }  
+            return false;
+        // } 
+
+
         
     }
 
