@@ -31,10 +31,13 @@ public class AppointmentService {
 
           if(Math.abs(min)<30)
           {
-            thro
+            throw new RuntimeException("Error: Veterinarian has an overlapping appointment!");
           }
         }
       }
+
+      appointment.setStatus(Appointment.STATUS.SCHEDULED);
+      
 
       
     }
