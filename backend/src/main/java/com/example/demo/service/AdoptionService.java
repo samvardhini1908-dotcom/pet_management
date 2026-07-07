@@ -70,7 +70,6 @@ public class AdoptionService {
     {
         Optional<Shelter> ans=shelterRepository.findById(shelterId);
 
-        // if(ans.isPresent()){
             Shelter shelter=ans.get();
             shelter.getCapacity();
 
@@ -80,7 +79,7 @@ public class AdoptionService {
                 return true;
             }
             return false;
-        // } 
+        
 
 
         
