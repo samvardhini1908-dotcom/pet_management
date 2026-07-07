@@ -20,6 +20,13 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
+    Appointment scheduleAppointment(Appointment appointment)
+    {
+
+    }
+
+    Appointment  
+
 
     
     
