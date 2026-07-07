@@ -20,7 +20,7 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    Appointment scheduleAppointment(Appointment appointment)
+    void scheduleAppointment(Appointment appointment)
     {
       List<Appointment> vetAppointments=appointmentRepository.findAll();
       for(Appointment exist : vetAppointments)
@@ -37,7 +37,7 @@ public class AppointmentService {
       }
 
       appointment.setStatus(Appointment.STATUS.SCHEDULED);
-      
+      appointmentRepository.save(appointment);
 
       
     }
