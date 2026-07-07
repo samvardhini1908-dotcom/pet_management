@@ -63,10 +63,11 @@ public class AdoptionService {
 
     boolean canShelterAcceptPet(Long shelterId)
     {
-        Optional<Shelter>ans=shelterRepository.findById(shelterId);
+        Optional<Shelter> ans=shelterRepository.findById(shelterId);
 
         if(ans.isPresent()){
             Shelter shelter=ans.get();
+            shelter.getCapacity()
             
         }
     }
