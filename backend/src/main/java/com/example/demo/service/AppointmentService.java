@@ -30,9 +30,10 @@ public class AppointmentService {
     Appointment updateStatus(Long id,String status)
     {
 
-        Appointment appointment=appointmentRepository.findById(id).orElseThrow(()->new RuntimeE)
-    } 
+        Appointment appointment=appointmentRepository.findById(id);
+        appointment.setStatus(status);
 
+        return appoin
 
     
     
