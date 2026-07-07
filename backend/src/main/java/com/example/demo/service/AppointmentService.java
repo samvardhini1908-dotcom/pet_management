@@ -22,10 +22,13 @@ public class AppointmentService {
 
     Appointment scheduleAppointment(Appointment appointment)
     {
-
+      List<Appointment
     }
 
-    Appointment  
+    Appointment updateStatus(Long id,String status)
+    {
+
+    } 
 
 
     
