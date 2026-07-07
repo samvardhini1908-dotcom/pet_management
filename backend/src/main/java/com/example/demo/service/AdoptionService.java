@@ -24,7 +24,7 @@ public class AdoptionService {
     ShelterRepository shelterRepository;
 
     @Autowired
-    PetRepository 
+    PetRepository petRepository;
 
     List<AdoptionRequest> getAllRequests()
     {
@@ -72,6 +72,8 @@ public class AdoptionService {
         if(ans.isPresent()){
             Shelter shelter=ans.get();
             shelter.getCapacity();
+
+            petRepository.findAll()
             
         }
     }
