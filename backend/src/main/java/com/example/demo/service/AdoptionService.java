@@ -67,7 +67,7 @@ public class AdoptionService {
 
         if(ans.isPresent()){
             Shelter shelter=ans.get();
-            long count
+            
         }
     }
 
