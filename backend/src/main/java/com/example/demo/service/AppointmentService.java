@@ -22,7 +22,9 @@ public class AppointmentService {
 
     Appointment scheduleAppointment(Appointment appointment)
     {
-      List<Appointment
+      List<Appointment> vetAppointments=appointmentRepository.findByVeterinarian(appointment.getVeterinarian());
+
+      
     }
 
     Appointment updateStatus(Long id,String status)
