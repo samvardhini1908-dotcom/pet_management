@@ -33,7 +33,8 @@ public class AppointmentService {
         Appointment appointment=appointmentRepository.findById(id).orElseThrow();
         appointment.setStatus(status);
 
-        appointmentRepository.save(appointment);
+        return appointmentRepository.save(appointment);
+    }
 
     
     
