@@ -30,10 +30,10 @@ public class AppointmentService {
     Appointment updateStatus(Long id,String status)
     {
 
-        Appointment appointment=appointmentRepository.findById(id);
+        Appointment appointment=appointmentRepository.findById(id).orElseThrow();
         appointment.setStatus(status);
 
-        return appointmentRepository.save(appointment);
+        appointmentRepository.save(appointment);
 
     
     
