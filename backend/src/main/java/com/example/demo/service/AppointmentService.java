@@ -27,7 +27,12 @@ public class AppointmentService {
         {
         if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
         {
-          long min=java.time.Duration.between(null, null)
+          long min=java.time.Duration.between(exist.getAppointmentDate(),appointment.getAppointmentDate()).toMinutes();
+
+          if(Math.abs(min)<30)
+          {
+            thro
+          }
         }
       }
 
