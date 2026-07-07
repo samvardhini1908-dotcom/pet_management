@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.AdoptionRequest;
+import com.example.demo.model.Pet;
 import com.example.demo.model.Shelter;
 import com.example.demo.repository.AdoptionRequestRepository;
 import com.example.demo.repository.PetRepository;
@@ -73,7 +74,11 @@ public class AdoptionService {
             Shelter shelter=ans.get();
             shelter.getCapacity();
 
-            petRepository.findAll();
+            List<Pet>count= petRepository.findAll();
+
+            if(count < shelter.getCapacity()){
+                return 
+            }
             
         }
     }
