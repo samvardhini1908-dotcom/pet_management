@@ -73,7 +73,7 @@ public class AdoptionService {
             Shelter shelter=ans.get();
             shelter.getCapacity();
 
-            petRepository.findAll()
+            petRepository.findAll();
             
         }
     }
