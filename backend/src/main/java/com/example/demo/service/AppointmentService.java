@@ -23,7 +23,13 @@ public class AppointmentService {
     Appointment scheduleAppointment(Appointment appointment)
     {
       List<Appointment> vetAppointments=appointmentRepository.findAll();
-      for(Appointment exits : vet)
+      for(Appointment exist : vetAppointments)
+        {
+        if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
+        {
+          long min=java.time.Duration.between(null, null)
+        }
+      }
 
       
     }
