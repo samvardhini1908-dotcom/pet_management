@@ -74,10 +74,10 @@ public class AdoptionService {
             Shelter shelter=ans.get();
             shelter.getCapacity();
 
-            List<Pet>count= petRepository.findAll();
+            List<Pet> count = petRepository.findAll();
 
             if(count < shelter.getCapacity()){
-                return 
+                return true;
             }
             
         }
