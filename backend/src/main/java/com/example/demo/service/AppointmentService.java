@@ -22,7 +22,8 @@ public class AppointmentService {
 
     Appointment scheduleAppointment(Appointment appointment)
     {
-      List<Appointment> vetAppointments=appointmentRepository.findByVeterinarian(appointment.getVeterinarian());
+      List<Appointment> vetAppointments=appointmentRepository.findAll();
+      for(Appointment exits : vet)
 
       
     }
