@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.model.AdoptionRequest;
 import com.example.demo.model.Shelter;
 import com.example.demo.repository.AdoptionRequestRepository;
+import com.example.demo.repository.PetRepository;
 import com.example.demo.repository.ShelterRepository;
 
 @Service
@@ -21,6 +22,9 @@ public class AdoptionService {
 
     @Autowired
     ShelterRepository shelterRepository;
+
+    @Autowired
+    PetRepository 
 
     List<AdoptionRequest> getAllRequests()
     {
@@ -67,7 +71,7 @@ public class AdoptionService {
 
         if(ans.isPresent()){
             Shelter shelter=ans.get();
-            shelter.getCapacity()
+            shelter.getCapacity();
             
         }
     }
