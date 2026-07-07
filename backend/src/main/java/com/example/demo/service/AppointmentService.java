@@ -33,7 +33,7 @@ public class AppointmentService {
         Appointment appointment=appointmentRepository.findById(id);
         appointment.setStatus(status);
 
-        return appoin
+        return appointmentRepository.save(appointment);
 
     
     
