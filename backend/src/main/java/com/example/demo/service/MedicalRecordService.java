@@ -37,7 +37,7 @@ public class MedicalRecordService {
 
     MedicalRecord approveRecord(Long id)
     {
-        MedicalRecord record=medicalRecordRepository.findById(id);
+        MedicalRecord record=medicalRecordRepository.findById(id).orElseThrow(()->new R)
         record.setStatus("APPROVED");
         return medicalRecordRepository.save(record);
     }
