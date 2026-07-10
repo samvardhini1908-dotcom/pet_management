@@ -37,7 +37,7 @@ public class MedicalRecordService {
 
     MedicalRecord approveRecord(Long id)
     {
-        MedicalRecord record=medicalRecordRepository.findById(id).orElseThrow(()->new R)
+        MedicalRecord record=medicalRecordRepository.findById(id).orElseThrow(()->new RuntimeException("Record not found"));
         record.setStatus("APPROVED");
         return medicalRecordRepository.save(record);
     }
