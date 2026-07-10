@@ -29,7 +29,12 @@ public class MedicalRecordService {
         return medicalRecordRepository.save(record);
     }
 
-    List<MedicalRecord> getRec
+    List<MedicalRecord> getRecordsByPetId(Long petId)
+    {
+        return medicalRecordRepository.findAll()
+        .stream()
+        .filter(record -> record.getPet() != null )
+    }
 
 
     
