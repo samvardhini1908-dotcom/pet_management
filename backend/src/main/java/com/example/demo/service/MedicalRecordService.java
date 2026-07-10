@@ -12,9 +12,9 @@ public class MedicalRecordService {
     @Autowired
     MedicalRecordRepository medicalRecordRepository;
 
-    List<MedicalRecord>getAllRecords()
-    {
-        return medicalRecordRepository.findAll();
-    }
+    // List<MedicalRecord>getAllRecords()
+    // {
+    //     return medicalRecordRepository.findAll();
+    // }
     
 }
