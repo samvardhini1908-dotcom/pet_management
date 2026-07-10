@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.MedicalRecord;
+import com.example.demo.repository.AppointmentRepository;
 import com.example.demo.repository.MedicalRecordRepository;
 
 @Service
@@ -16,12 +17,19 @@ public class MedicalRecordService {
     MedicalRecordRepository medicalRecordRepository;
 
     @Autowired
-    Appo
+    AppointmentRepository appointmentRepository;
 
     List<MedicalRecord>getAllRecords()
     {
         return medicalRecordRepository.findAll();
     }
+
+    MedicalRecord saveRecord(MedicalRecord record)
+    {
+        return medicalRecordRepository.save(record);
+    }
+
+    List<MedicalRecord> getRec
 
 
     
