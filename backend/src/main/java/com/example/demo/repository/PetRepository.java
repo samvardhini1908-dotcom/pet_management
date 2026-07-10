@@ -10,7 +10,7 @@ import com.example.demo.model.User;
 
 @Repository
 public interface PetRepository extends JpaRepository<Pet,Long>{
-    List<Pet> findByOwner(String username);
+    List<Pet> findByOwner(User username);
     List<Pet>findByAvailableForAdoptionTrue();
 
     
