@@ -26,7 +26,6 @@ public class PetService {
 
     public List<Pet>getPetsByOwner(String username)
     {
-        
         return petRepository.findByOwner(username);
     }
 
