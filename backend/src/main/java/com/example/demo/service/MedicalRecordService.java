@@ -17,9 +17,6 @@ public class MedicalRecordService {
     @Autowired
     MedicalRecordRepository medicalRecordRepository;
 
-    @Autowired
-    AppointmentRepository appointmentRepository;
-
     List<MedicalRecord>getAllRecords()
     {
         return medicalRecordRepository.findAll();
@@ -38,7 +35,11 @@ public class MedicalRecordService {
         .collect(Collectors.toList());
     }
 
-    MedicalRecord approv
+    MedicalRecord approveRecord(Long id)
+    {
+        MedicalRecord record=medicalRecordRepository.findById(id);
+        record.set
+    }
 
 
     
