@@ -8,13 +8,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.Pet;
+import com.example.demo.model.User;
 import com.example.demo.repository.PetRepository;
+import com.example.demo.repository.UserRepository;
 
 @Service
 @Transactional
 public class PetService {
     @Autowired
     PetRepository petRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     public List<Pet>getAllPets(){
         return petRepository.findAll();
@@ -27,7 +32,7 @@ public class PetService {
     public List<Pet>getPetsByOwner(String username)
     {
          User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        return petRepository.findByOwner(username);
+        return petRepository.findByOwner(user);
     }
 
     public List<Pet>getPetsForAdoption(){
