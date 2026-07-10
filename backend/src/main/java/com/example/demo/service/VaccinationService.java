@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +39,9 @@ public class VaccinationService {
     // {
 
     // }
+    public List<Vaccination> getUpcomingReminders() 
+    {
+        return vaccinationRepository.findByNextDueDateAfter(LocalDate.now());
+    }
     
 }
