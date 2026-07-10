@@ -26,6 +26,7 @@ public class PetService {
 
     public List<Pet>getPetsByOwner(String username)
     {
+        User user = userRepository.findByUsername(username);
         return petRepository.findByOwner(username);
     }
 
