@@ -78,7 +78,7 @@ public class PetController {
         existingPet.setAge(petDetails.getAge());
         existingPet.setGender(petDetails.getGender());
         existingPet.setImageUrl(petDetails.getImageUrl());
-        existingPet.setAvailableForAdoption(petDetails.getAvailableForAdoption());
+        existingPet.setAvailableForAdoption(petDetails.isAvailableForAdoption());
 
         petService.savePet(existingPet);
 
