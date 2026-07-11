@@ -15,6 +15,9 @@ import com.example.demo.model.Pet;
 import com.example.demo.service.AdoptionService;
 import com.example.demo.service.PetService;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
+
 @CrossOrigin(origins = "*",maxAge = 3600)
 @RestController
 @RequestMapping("/api/pets")
@@ -44,7 +47,10 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    
+    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
+    {
+        
+    }
 
 
 
