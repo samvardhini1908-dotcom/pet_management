@@ -95,7 +95,10 @@ public class PetController {
         return ResponseEntity.ok("Pet deleted successfully.");
     }
 
-    @GetMapping
+    @GetMapping("/{adoption}")
+    public List<Pet> getPetsForAdoption(){
+        return petService.getPetsForAdoption();
+    }
     
 
 
