@@ -34,7 +34,8 @@ public class PetController {
     @GetMapping("/{id}")
     public ResponseEntity<Pet> getAllPetById(@PathVariable Long id)
     {
-        
+        return petService.getPetById(id)
+        .map(ResponseEntity.status(200))
     }
 
     
