@@ -67,7 +67,14 @@ public class PetController {
         Pet existingPet = petService.getPetById(id)
         .orElseThrow(()->new RuntimeException("Pet not found"));
 
-        
+        if(!adoptionService.canShelterAcceptPet(id))
+        {
+            return ResponseEntity.badRequest().build();
+        }
+
+        existingPet.setPetName(petDetails.getPetName());
+        existingPet.setSpecies(petDetails.getSpecies());
+        existingPet.setB
 
     }
 
