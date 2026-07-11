@@ -74,7 +74,11 @@ public class PetController {
 
         existingPet.setPetName(petDetails.getPetName());
         existingPet.setSpecies(petDetails.getSpecies());
-        existingPet.setB
+        existingPet.setBreed(petDetails.getBreed());
+        existingPet.setAge(petDetails.getAge());
+        existingPet.setGender(petDetails.getGender());
+        existingPet.setImageUrl(petDetails.getImageUrl());
+        existingPet.set
 
     }
 
