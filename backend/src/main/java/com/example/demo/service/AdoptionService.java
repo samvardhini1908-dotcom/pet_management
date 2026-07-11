@@ -79,10 +79,6 @@ public class AdoptionService {
                 return true;
             }
             return false;
-        
-
-
-        
     }
 
 
