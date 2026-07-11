@@ -47,9 +47,9 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
+    public ResponseEntity<?> createPet(@Valid @Request Pet pet)
     {
-        if(!adoptionService.canShelterAcceptPet())
+        if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
         {
             return ResponseEntity.badRequest()
             .body("Error: Shelter is at maximum capacity!");
