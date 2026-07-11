@@ -27,18 +27,18 @@ public class AdoptionService {
     @Autowired
     PetRepository petRepository;
 
-    List<AdoptionRequest> getAllRequests()
+    public List<AdoptionRequest> getAllRequests()
     {
         return AdoptionRequestRepository.findAll();
     }
 
-    AdoptionRequest createRequest(AdoptionRequest request)
+    public AdoptionRequest createRequest(AdoptionRequest request)
     {
         request.setStatus(AdoptionRequest.STATUS.PENDING);
         return AdoptionRequestRepository.save(request);
     }
 
-    AdoptionRequest updateRequestStatus(Long id,String status)
+    public AdoptionRequest updateRequestStatus(Long id,String status)
     {
         Optional<AdoptionRequest> ans=AdoptionRequestRepository.findById(id);
         if(ans.isPresent()){
@@ -61,12 +61,12 @@ public class AdoptionService {
         
     }
 
-    List<Shelter> getAllShelters()
+    public List<Shelter> getAllShelters()
     {
         return shelterRepository.findAll();
     }
 
-    boolean canShelterAcceptPet(Long shelterId)
+    public boolean canShelterAcceptPet(Long shelterId)
     {
         Optional<Shelter> ans=shelterRepository.findById(shelterId);
 

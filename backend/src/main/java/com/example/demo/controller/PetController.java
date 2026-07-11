@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,7 +16,7 @@ import com.example.demo.model.Pet;
 import com.example.demo.service.AdoptionService;
 import com.example.demo.service.PetService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*",maxAge = 3600)
@@ -47,7 +48,7 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createPet(@Valid @Request Pet pet)
+    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
     {
         if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
         {
