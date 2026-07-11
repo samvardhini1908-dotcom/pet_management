@@ -9,10 +9,10 @@ import com.example.demo.service.PetService;
 
 @CrossOrigin(origins = "*",maxAge = 3600)
 @RestController
-@RequestMapping(/api/pets)
+@RequestMapping("/api/pets)
 public class PetController {
     private final PetService petService;
     private final AdoptionService adoptionService;
-    
+
     
 }
