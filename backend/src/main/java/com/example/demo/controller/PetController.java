@@ -35,7 +35,7 @@ public class PetController {
     public ResponseEntity<Pet> getAllPetById(@PathVariable Long id)
     {
         return petService.getPetById(id)
-        .map(ResponseEntity.status(200))
+        .map(pet->ResponseEntity.status(200).body(null))
         .orElse(ResponseEntity.status(404).build());
 
     }
