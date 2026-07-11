@@ -51,8 +51,11 @@ public class PetController {
     {
         if(!adoptionService.canShelterAcceptPet())
         {
-            return ResponseEntity.status(0)
+            return ResponseEntity.badRequest()
+            .body("Error: Shelter is at maximum capacity!");
         }
+        petService.createPet(pet);
+        return ResponseEntity.
     }
 
 
