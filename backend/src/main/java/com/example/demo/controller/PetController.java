@@ -48,7 +48,7 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
+    public ResponseEntity<?> savePet(@Valid @RequestBody Pet pet)
     {
         if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
         {
@@ -58,6 +58,10 @@ public class PetController {
         petService.savePet(pet);
         return ResponseEntity.status(200).body("Pet created successfully.");
     }
+
+    @PostMapping("{/id}")
+
+
 
 
 
