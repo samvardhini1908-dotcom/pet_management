@@ -88,6 +88,14 @@ public class PetController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
+    public ResponseEntity<?>deletePet(@PathVariable Long id)
+    {
+        petService.deletePet(id);
+        return ResponseEntity.ok("Pet deleted successfully.");
+    }
+
+    @GetMapping
     
 
 
