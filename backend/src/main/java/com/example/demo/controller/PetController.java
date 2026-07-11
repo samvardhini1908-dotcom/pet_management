@@ -49,7 +49,10 @@ public class PetController {
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
     public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
     {
-        
+        if(!adoptionService.canShelterAcceptPet())
+        {
+            return ResponseEntity.status(0)
+        }
     }
 
 
