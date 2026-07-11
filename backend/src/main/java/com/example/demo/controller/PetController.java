@@ -36,6 +36,8 @@ public class PetController {
     {
         return petService.getPetById(id)
         .map(ResponseEntity.status(200))
+        .orElse(ResponseEntity.status(404).build());
+
     }
 
     
