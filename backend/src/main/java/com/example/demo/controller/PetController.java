@@ -99,11 +99,5 @@ public class PetController {
     public List<Pet> getPetsForAdoption(){
         return petService.getPetsForAdoption();
     }
-    
-
-
-
-
-
-    
+        
 }
