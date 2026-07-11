@@ -55,7 +55,7 @@ public class PetController {
             return ResponseEntity.badRequest()
             .body("Error: Shelter is at maximum capacity!");
         }
-        petService.createPet(pet);
+        petService.savePet(pet);
         return ResponseEntity.status(200).body("Pet created successfully.");
     }
 
