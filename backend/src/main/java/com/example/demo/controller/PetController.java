@@ -60,7 +60,7 @@ public class PetController {
         return ResponseEntity.status(200).body("Pet created successfully.");
     }
 
-    @PutMapping("{/id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
     public ResponseEntity<?> updatePet(@PathVariable Long id,@Valid @RequestBody Pet petDetails)
     {
@@ -80,9 +80,9 @@ public class PetController {
         existingPet.setImageUrl(petDetails.getImageUrl());
         existingPet.setAvailableForAdoption(petDetails.getAvailableForAdoption());
 
-        petService.save(existingPet);
+        petService.savePet(existingPet);
 
-        return ResponseEntity.ok("Pet updated")
+        return ResponseEntity.ok("Pet updated successfully.");
 
     }
 
