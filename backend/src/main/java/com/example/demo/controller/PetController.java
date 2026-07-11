@@ -62,8 +62,9 @@ public class PetController {
 
     @PutMapping("{/id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> 
+    public ResponseEntity<?> updatePet(@PathVariable Long id,@Valid @RequestBody Pet petDetails)
     {
+        
 
     }
 
