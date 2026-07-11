@@ -32,7 +32,7 @@ public class PetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pet> getAllPetById(@PathVariable Long id)
+    public ResponseEntity<Pet> getPetById(@PathVariable Long id)
     {
         return petService.getPetById(id)
         .map(pet->ResponseEntity.status(200).body(pet))
@@ -40,7 +40,7 @@ public class PetController {
 
     }
 
-    
+
 
     
 }
