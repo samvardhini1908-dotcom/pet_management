@@ -64,6 +64,9 @@ public class PetController {
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
     public ResponseEntity<?> updatePet(@PathVariable Long id,@Valid @RequestBody Pet petDetails)
     {
+        Pet existingPet = petService.getPetById(id)
+        .orElseThrow(()->new RuntimeException("Pet not found"));
+
         
 
     }
