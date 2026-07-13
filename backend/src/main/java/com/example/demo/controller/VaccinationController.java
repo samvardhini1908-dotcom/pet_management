@@ -20,9 +20,9 @@ public class VaccinationController {
         this.vaccinationService = vaccinationService;
     }
 
-    @GetMapping
-    {
-        public List<Vaccination> 
-    }
+    // @GetMapping
+    // {
+    //     public List<Vaccination> 
+    // }
     
 }
