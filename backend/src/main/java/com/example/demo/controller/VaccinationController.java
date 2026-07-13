@@ -1,15 +1,18 @@
 package com.example.demo.controller;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.model.Vaccination;
 import com.example.demo.service.VaccinationService;
 
 @RestController
 @CrossOrigin(origins = "*",maxAge = 3600)
-@RequestMapping("/api/")
+@RequestMapping("/api/vaccinations")
 public class VaccinationController {
     private final VaccinationService vaccinationService;
 
@@ -17,6 +20,9 @@ public class VaccinationController {
         this.vaccinationService = vaccinationService;
     }
 
-    @GetMapping("")
+    @GetMapping
+    {
+        public List<Vaccination> 
+    }
     
 }
