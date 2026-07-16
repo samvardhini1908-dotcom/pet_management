@@ -30,6 +30,16 @@ public class PetController {
     private final AdoptionService adoptionService;
     
     
+    public PetController(PetService petService) {
+        this.petService = petService;
+    }
+
+    
+    public PetController(AdoptionService adoptionService) {
+        this.adoptionService = adoptionService;
+    }
+
+
     @GetMapping("")
     public List<Pet> getAllPets()
     {
