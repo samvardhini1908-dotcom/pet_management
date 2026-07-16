@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,16 +25,22 @@ public class VaccinationController {
     }
 
     @GetMapping
+    public List<Vaccination> getAllVaccinations()
     {
-        public List<Vaccination> getAllVaccinations()
         {
             return vaccinationService.getAllVaccinations();
         }
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN'))
-    public Vaccination savedVaccination(@RequestBo)
+    @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN')")
+    public Vaccination savedVaccination(@RequestBody Vaccination vaccination)
+    {
+        return vaccinationService.saveVaccination(vaccination);
+    }
+
+    
+
 
     
 }
