@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -52,13 +53,24 @@ public class PetController {
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
     public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
     {
-        if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
-        {
-            return ResponseEntity.badRequest()
-            .body("Error: Shelter is at maximum capacity!");
-        }
-        petService.savePet(pet);
-        return ResponseEntity.status(201).body("Pet created successfully.");
+        // if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
+        // {
+        //     return ResponseEntity.badRequest()
+        //     .body("Error: Shelter is at maximum capacity!");
+        // }
+        // petService.savePet(pet);
+        // return ResponseEntity.status(201).body("Pet created successfully.");
+        if (adoptionService != null) {
+        if (!adoptionService.canShelterAcceptPet(pet.getShelter().getId())) {
+        return ResponseEntity.badRequest()
+                .body("Error: Shelter is at maximum capacity!");
+    }
+}
+
+petService.savePet(pet);
+
+return ResponseEntity.status(HttpStatus.CREATED)
+        .body("Pet created successfully.");
     }
 
     @PutMapping("/{id}")
@@ -72,6 +84,12 @@ public class PetController {
         // {
         //     return ResponseEntity.badRequest().build();
         // }
+        if (adoptionService != null)
+        {
+             if (!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId())) {
+            return ResponseEntity.badRequest().build();
+    }
+        }
 
         existingPet.setPetName(petDetails.getPetName());
         existingPet.setSpecies(petDetails.getSpecies());
