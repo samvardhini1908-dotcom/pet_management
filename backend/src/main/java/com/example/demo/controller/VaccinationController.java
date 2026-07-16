@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.model.Vaccination;
 import com.example.demo.service.VaccinationService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 @CrossOrigin(origins = "*",maxAge = 3600)
@@ -34,7 +33,7 @@ public class VaccinationController {
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN'))
-    public Vaccination savedVaccination(@RequestBody Va)
+    public Vaccination savedVaccination(@RequestBo)
 
     
 }
