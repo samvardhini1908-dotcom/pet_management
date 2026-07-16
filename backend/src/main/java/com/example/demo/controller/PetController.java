@@ -58,7 +58,7 @@ public class PetController {
             .body("Error: Shelter is at maximum capacity!");
         }
         petService.savePet(pet);
-        return ResponseEntity.status(200).body("Pet created successfully.");
+        return ResponseEntity.status(201).body("Pet created successfully.");
     }
 
     @PutMapping("/{id}")
