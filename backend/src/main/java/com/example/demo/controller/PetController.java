@@ -29,16 +29,12 @@ public class PetController {
     private final PetService petService;
     private final AdoptionService adoptionService;
     
-    
-    public PetController(PetService petService) {
-        this.petService = petService;
-    }
 
-    
-    public PetController(AdoptionService adoptionService) {
+
+    public PetController(PetService petService, AdoptionService adoptionService) {
+        this.petService = petService;
         this.adoptionService = adoptionService;
     }
-
 
     @GetMapping("")
     public List<Pet> getAllPets()
