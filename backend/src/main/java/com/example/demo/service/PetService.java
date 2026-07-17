@@ -3,53 +3,19 @@ package com.example.demo.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.example.demo.model.Pet;
-import com.example.demo.model.User;
-import com.example.demo.repository.PetRepository;
-import com.example.demo.repository.UserRepository;
 
-@Service
-@Transactional
-public class PetService {
-    @Autowired
-    PetRepository petRepository;
+public interface PetService {
 
-    @Autowired
-    UserRepository userRepository;
+    List<Pet> getAllPets();
 
-    public List<Pet>getAllPets(){
-        return petRepository.findAll();
-    }
+    Optional<Pet> getPetById(Long id);
 
-    public Optional<Pet>getPetById(Long id){
-        return petRepository.findById(id);
-    }
+    List<Pet> getPetsByOwner(String username);
 
-    public List<Pet>getPetsByOwner(String username)
-    {
-         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        return petRepository.findByOwner(user);
-    }
+    List<Pet> getPetsForAdoption();
 
-    public List<Pet>getPetsForAdoption(){
-        return petRepository.findByAvailableForAdoptionTrue();
+    Pet savePet(Pet pet);
 
-    }
-
-    public Pet savePet(Pet pet)
-    {
-        return petRepository.save(pet);
-    }
-
-    public void deletePet(Long id)
-    {
-        petRepository.deleteById(id);
-    }
-
-
-    
+    void deletePet(Long id);
 }
