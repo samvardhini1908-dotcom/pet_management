@@ -36,7 +36,7 @@ public class PetController {
         this.adoptionService = adoptionService;
     }
 
-    @GetMapping("")
+    @GetMapping()
     public List<Pet> getAllPets()
     {
         return petService.getAllPets();
