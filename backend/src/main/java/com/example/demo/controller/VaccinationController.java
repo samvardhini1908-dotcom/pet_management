@@ -41,7 +41,10 @@ public class VaccinationController {
     }
 
     @PutMapping("{/id}")
-    
+    @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
+    public Vaccination 
+
+
 
     
 
