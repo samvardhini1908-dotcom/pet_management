@@ -53,7 +53,7 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createMethod(@Valid @RequestBody Pet pet)
+    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
     {
         if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
         {
