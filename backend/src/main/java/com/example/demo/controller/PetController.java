@@ -62,18 +62,7 @@ public class PetController {
         }
         petService.savePet(pet);
         return ResponseEntity.status(201).body("Pet created successfully.");
-//         if (adoptionService != null) {
-//         if (!adoptionService.canShelterAcceptPet(pet.getShelter().getId())) 
-//             {
-//                  return ResponseEntity.ok()
-//                          .body("Error: Shelter is at maximum capacity!");
-//             }         
-// }
 
-// petService.savePet(pet);
-
-// return ResponseEntity.status(HttpStatus.CREATED)
-//         .body("Pet created successfully.");
     }
 
     @PutMapping("/{id}")
