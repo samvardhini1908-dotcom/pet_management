@@ -53,7 +53,7 @@ public class PetController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
-    public ResponseEntity<?> create(@Valid @RequestBody Pet pet)
+    public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet)
     {
         if(!adoptionService.canShelterAcceptPet(pet.getShelter().getId()))
         {
@@ -62,18 +62,18 @@ public class PetController {
         }
         petService.savePet(pet);
         return ResponseEntity.status(201).body("Pet created successfully.");
-        // if (adoptionService != null) {
-        // if (!adoptionService.canShelterAcceptPet(pet.getShelter().getId())) 
-        //     {
-        //          return ResponseEntity.ok()
-        //                  .body("Error: Shelter is at maximum capacity!");
-        //     }         
-}
+//         if (adoptionService != null) {
+//         if (!adoptionService.canShelterAcceptPet(pet.getShelter().getId())) 
+//             {
+//                  return ResponseEntity.ok()
+//                          .body("Error: Shelter is at maximum capacity!");
+//             }         
+// }
 
-petService.savePet(pet);
+// petService.savePet(pet);
 
-return ResponseEntity.status(HttpStatus.CREATED)
-        .body("Pet created successfully.");
+// return ResponseEntity.status(HttpStatus.CREATED)
+//         .body("Pet created successfully.");
     }
 
     @PutMapping("/{id}")
