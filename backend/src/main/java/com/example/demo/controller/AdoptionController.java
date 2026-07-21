@@ -14,6 +14,10 @@ import com.example.demo.service.AdoptionService;
 public class AdoptionController {
     private final AdoptionService adoptionService;
 
+    public AdoptionController(AdoptionService adoptionService) {
+        this.adoptionService = adoptionService;
+    }
+
     @Autowired
      
     
