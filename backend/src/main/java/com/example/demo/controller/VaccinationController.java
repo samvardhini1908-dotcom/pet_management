@@ -53,22 +53,24 @@ public class VaccinationController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public ResponseEntity<Vaccination> updateVaccinations (@PathVariable Long id,@RequestBody Vaccination vaccinationDetails)
+    public ResponseEntity<Vaccination> updateVaccination(@PathVariable Long id,@RequestBody Vaccination vaccinationDetails) 
     {
-        vaccinationService.getVaccinationById(id)
-       .filter(v -> v.getId().equals(id))
-       .findFirst()
-       .map(existingVaccination ->{
-        existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
-        existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
-        existingVaccination.setNextDueDate(vaccinationDetails.getNextDueDate());
-        existingVaccination.setStatus(vaccinationDetails.getStatus());
 
-        Vaccination savedVaccination=vaccinationService.saveVaccination(existingVaccination);
-        return ResponseEntity.ok(savedVaccination);
-       })
-       .orElse(ResponseEntity.notFound().build());
-    }
+    return vaccinationService.getVaccinationById(id)
+            .map(existingVaccination -> {
+
+                existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
+                existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
+                existingVaccination.setNextDueDate(vaccinationDetails.getNextDueDate());
+                existingVaccination.setStatus(vaccinationDetails.getStatus());
+
+                Vaccination savedVaccination =
+                        vaccinationService.saveVaccination(existingVaccination);
+
+                return ResponseEntity.ok(savedVaccination);
+            })
+            .orElse(ResponseEntity.notFound().build());
+}
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
