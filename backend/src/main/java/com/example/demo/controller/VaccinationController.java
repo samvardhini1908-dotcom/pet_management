@@ -46,7 +46,10 @@ public class VaccinationController {
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public ResponseEntity<Vaccination> updateVaccinations (@PathVariable Long id,@RequestBody Vaccination vaccinationDetails)
     {
-       return vaccinationService.getAllVaccinations().st
+       return vaccinationService.getAllVaccinations().stream()
+       .filter(v -> v.getId().equals(id))
+       .findFirst()
+       .map(existingVaccination)
     }
 
 
