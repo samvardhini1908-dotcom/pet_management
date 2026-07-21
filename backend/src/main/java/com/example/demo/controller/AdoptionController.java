@@ -25,7 +25,10 @@ public class AdoptionController {
     }
 
     @GetMapping
-    public List<AdoptionRequest> get
+    public List<AdoptionRequest> getAllAdoptions()
+    {
+        return adoptionService.getAllRequests();
+    }
     
      
     
