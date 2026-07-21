@@ -36,18 +36,26 @@ public class VaccinationController {
         }
     }
 
+    // @PostMapping
+    // @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN')")
+    // public Vaccination savedVaccination(@RequestBody Vaccination vaccination)
+    // {
+    //     return vaccinationService.saveVaccination(vaccination);
+    // }
+
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN')")
-    public Vaccination savedVaccination(@RequestBody Vaccination vaccination)
-    {
-        return vaccinationService.saveVaccination(vaccination);
-    }
+    public ResponseEntity<String> saveVaccination(@RequestBody Vaccination vaccination) {
+    vaccinationService.saveVaccination(vaccination);
+    return ResponseEntity.status(201)
+            .body("Vaccination created successfully.");
+}
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public ResponseEntity<Vaccination> updateVaccinations (@PathVariable Long id,@RequestBody Vaccination vaccinationDetails)
     {
-       return vaccinationService.getAllVaccinations().stream()
+        vaccinationService.getVaccinationById(id)
        .filter(v -> v.getId().equals(id))
        .findFirst()
        .map(existingVaccination ->{
