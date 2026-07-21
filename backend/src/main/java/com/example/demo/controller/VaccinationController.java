@@ -64,7 +64,7 @@ public class VaccinationController {
 
     @DeleteMapping("{/id")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public ResponseEntity<String> deleteVaccination(@PathVariable Long id)
+    public ResponseEntity<String> deleteMet(@PathVariable Long id)
     {
         vaccinationService.deleteVaccination(id);
         return ResponseEntity.ok("Vaccination deleted successfully.");
