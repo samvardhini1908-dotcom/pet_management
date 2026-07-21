@@ -70,7 +70,11 @@ public class VaccinationController {
         return ResponseEntity.ok("Vaccination deleted successfully.");
     }
 
-    @GetMapping
+    @GetMapping("/reminders")
+    public List<Vaccination> getReminders()
+    {
+        return vaccinationService.getUpcomingReminders();
+    }
 
 
     
