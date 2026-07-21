@@ -62,8 +62,9 @@ public class VaccinationController {
        .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping
-
+    @DeleteMapping("{/id")
+    @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
+    public ResponseEntity<String> deleteVaccination(@PathVariable Long id)
 
 
     
