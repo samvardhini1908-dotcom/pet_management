@@ -1,47 +1,22 @@
 package com.example.demo.service;
 
-import java.time.LocalDate;
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
 
 import com.example.demo.model.Pet;
 import com.example.demo.model.Vaccination;
-import com.example.demo.repository.VaccinationRepository;
 
-@Service
-@Transactional
-public class VaccinationService {
-    @Autowired
-    VaccinationRepository vaccinationRepository;
-    public List<Vaccination> getAllVaccinations(){
-        return vaccinationRepository.findAll();
-    }
+public interface VaccinationService {
 
-    public List<Vaccination>getVaccinationsByPet(Pet pet)
-    {
-        return vaccinationRepository.findByPet(pet);
-    }
+    List<Vaccination> getAllVaccinations();
 
-    public Vaccination saveVaccination(Vaccination vaccination)
-    {
-        return vaccinationRepository.save(vaccination);
-    }
+    Optional<Vaccination> getVaccinationById(Long id);
 
-    public void deleteVaccination(Long id)
-    {
-        vaccinationRepository.deleteById(id);
-    }
+    List<Vaccination> getVaccinationsByPet(Pet pet);
 
-    // public List<Vaccination>getUpcomingReminders()
-    // {
+    Vaccination saveVaccination(Vaccination vaccination);
 
-    // }
-    public List<Vaccination> getUpcomingReminders() 
-    {
-        return vaccinationRepository.findByNextDueDateAfter(LocalDate.now());
-    }
-    
+    void deleteVaccination(Long id);
+
+    List<Vaccination> getUpcomingReminders();
 }
