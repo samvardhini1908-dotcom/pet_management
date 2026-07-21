@@ -52,7 +52,11 @@ public class VaccinationController {
        .map(existingVaccination ->{
         existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
         existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
-        existingVaccination.setNextDueDate(vaccinationDetails);
+        existingVaccination.setNextDueDate(vaccinationDetails.getNextDueDate());
+        existingVaccination.setStatus(vaccinationDetails.getStatus());
+
+        Vaccination savedVaccination=vaccinationService.saveVaccination(existingVaccination);
+        return ResponseEntity.o
        })
     }
 
