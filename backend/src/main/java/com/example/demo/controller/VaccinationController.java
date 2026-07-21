@@ -49,7 +49,11 @@ public class VaccinationController {
        return vaccinationService.getAllVaccinations().stream()
        .filter(v -> v.getId().equals(id))
        .findFirst()
-       .map(existingVaccination ->)
+       .map(existingVaccination ->{
+        existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
+        existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
+        existingVaccination.setNextDueDate(vaccinationDetails);
+       })
     }
 
 
