@@ -43,7 +43,7 @@ public class VaccinationController {
         return vaccinationService.saveVaccination(vaccination);
     }
 
-    @PutMapping("{/id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public ResponseEntity<Vaccination> updateVaccinations (@PathVariable Long id,@RequestBody Vaccination vaccinationDetails)
     {
