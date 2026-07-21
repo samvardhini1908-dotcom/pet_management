@@ -45,18 +45,19 @@ public class VaccinationController {
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('VET') or hasRole('ADMIN')")
-    public ResponseEntity<String> saveVaccination(@RequestBody Vaccination vaccination) {
+    public ResponseEntity<String> saveVaccination(@RequestBody Vaccination vaccination) 
+    {
     vaccinationService.saveVaccination(vaccination);
     return ResponseEntity.status(201)
             .body("Vaccination created successfully.");
-}
+    }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public ResponseEntity<Vaccination> updateVaccination(@PathVariable Long id,@RequestBody Vaccination vaccinationDetails) 
     {
 
-    return vaccinationService.getVaccinationById(id)
+        return vaccinationService.getVaccinationById(id)
             .map(existingVaccination -> {
 
                 existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
@@ -70,7 +71,7 @@ public class VaccinationController {
                 return ResponseEntity.ok(savedVaccination);
             })
             .orElse(ResponseEntity.notFound().build());
-}
+    }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
