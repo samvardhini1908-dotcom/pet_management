@@ -40,9 +40,12 @@ public class VaccinationController {
         return vaccinationService.saveVaccination(vaccination);
     }
 
-    // @PutMapping("{/id}")
-    // @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    // public Vaccination getAllVaccinations()
+    @PutMapping("{/id}")
+    @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
+    public Vaccination getAllVaccinations()
+    {
+        
+    }
 
 
 
