@@ -49,7 +49,7 @@ public class VaccinationController {
        return vaccinationService.getAllVaccinations().stream()
        .filter(v -> v.getId().equals(id))
        .findFirst()
-       .map(existingVaccination)
+       .map(existingVaccination ->)
     }
 
 
