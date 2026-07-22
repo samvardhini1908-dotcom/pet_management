@@ -50,7 +50,7 @@ public class MedicalRecordController {
 
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public 
+    public M
 
    
     
