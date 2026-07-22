@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -38,7 +39,12 @@ public class AppointmentController {
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment)
     {
         try{
-            Appointment savedAppointment= appointmentService.saveA
+            Appointment savedAppointment= appointmentService.saveAppointment(appointment);
+            return new ResponseEntity<>(savedAppointment, HttpStatus.CREATED);
+        }
+        catch(Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus)
         }
     }
 
