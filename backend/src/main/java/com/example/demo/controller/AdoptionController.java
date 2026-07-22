@@ -40,7 +40,7 @@ public class AdoptionController {
     @PreAuthorize("hasRole('OWNER')")
     public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest adoptionRequest)
     {
-        adoptionRequest.setStatus("PENDING");
+        adoptionRequest.setStatus(AdoptionRequest.STATUS."PENDING");
         return adoptionService.createRequest(adoptionRequest);
     }
 
