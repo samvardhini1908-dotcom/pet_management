@@ -44,9 +44,9 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/pet/{petId}")
-    public List<MedicalRecord> specificPet(@PathVariable Long id)
+    public List<MedicalRecord> specificPet(@PathVariable Long petId)
     {
-        return medicalRecordService.getRecordsByPetId(id);
+        return medicalRecordService.getRecordsByPetId(petId);
     }
 
     @PutMapping("/{id}/approve")
