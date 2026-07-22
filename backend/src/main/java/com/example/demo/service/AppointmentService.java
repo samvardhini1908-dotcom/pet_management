@@ -74,7 +74,8 @@ public class AppointmentService {
     {
 
         Appointment appointment=appointmentRepository.findById(id).orElseThrow();
-        appointment.setStatus(Appointment.STATUS.valueOf(status));
+        appointment.setStatus(Appointment.STATUS.valueOf(status.toUpperCase()));
+        
 
         return appointmentRepository.save(appointment);
     }
