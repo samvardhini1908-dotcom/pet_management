@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.model.Appointment;
 import com.example.demo.service.AppointmentService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 
 @CrossOrigin
 @RestController
