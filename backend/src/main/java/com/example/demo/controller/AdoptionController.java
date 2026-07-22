@@ -44,7 +44,9 @@ public class AdoptionController {
 
     @PutMapping
     @PreAuthorize("hasRole('SHELTER') or hasRole('ADMIN')")
-    public AdoptionRequest
+    public AdoptionRequest updateAdoptionStatus(
+        @
+    )
     
      
     
