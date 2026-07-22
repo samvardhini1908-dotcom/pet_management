@@ -55,7 +55,7 @@ public class AppointmentController {
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public Appointment updateAppointment(@PathVariable Long id, @RequestParam String status)
     {
-
+     return appointmentService.updateStatus(id,status);
     }
 
 
