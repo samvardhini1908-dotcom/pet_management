@@ -49,23 +49,25 @@ public class AppointmentService {
        for (Appointment exist : vetAppointments) 
         {
   
-             if (exist.getVeterinarian().equals(appointment.getVeterinarian())) {
+             if (exist.getVeterinarian().equals(appointment.getVeterinarian())) 
+              {
  
-               long min = java.time.Duration
-                      .between(exist.getAppointmentDate(),
+                      long min = java.time.Duration
+                       .between(exist.getAppointmentDate(),
                               appointment.getAppointmentDate())
-                     .toMinutes();
-
-             if (Math.abs(min) < 30) {
-                throw new RuntimeException(
-                        "Error: Veterinarian has an overlapping appointment!");
-            }
+                       .toMinutes();
+ 
+                      if (Math.abs(min) < 30)
+                      {
+                        throw new RuntimeException(
+                          "Error: Veterinarian has an overlapping appointment!");
+                      }
+               }
         }
-    }
 
-    appointment.setStatus(Appointment.STATUS.SCHEDULED);
+        appointment.setStatus(Appointment.STATUS.SCHEDULED);
 
-    return appointmentRepository.save(appointment);
+        return appointmentRepository.save(appointment);
     }
 
     public Appointment updateStatus(Long id,String status)
