@@ -37,7 +37,7 @@ public class AdoptionController {
     @PreAuthorize("hasRole('OWNER')")
     public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest adoptionRequest)
     {
-        return 
+        adoptionRequest.setStatus(P);
     }
     
      
