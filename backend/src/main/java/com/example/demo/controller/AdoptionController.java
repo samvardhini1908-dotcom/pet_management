@@ -35,7 +35,7 @@ public class AdoptionController {
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER')")
-    public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest )
+    public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest a)
     
      
     
