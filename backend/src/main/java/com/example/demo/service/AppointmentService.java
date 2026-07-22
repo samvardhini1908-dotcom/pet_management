@@ -21,26 +21,51 @@ public class AppointmentService {
     }
 
     // public void scheduleAppointment(Appointment appointment)
-    public Appointment saveAppointment(Appointment appointment)
-    {
-      List<Appointment> vetAppointments=appointmentRepository.findAll();
-      for(Appointment exist : vetAppointments)
-        {
-        if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
-        {
-          long min=java.time.Duration.between(exist.getAppointmentDate(),appointment.getAppointmentDate()).toMinutes();
+    // {
+    //   List<Appointment> vetAppointments=appointmentRepository.findAll();
+    //   for(Appointment exist : vetAppointments)
+    //     {
+    //     if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
+    //     {
+    //       long min=java.time.Duration.between(exist.getAppointmentDate(),appointment.getAppointmentDate()).toMinutes();
 
-          if(Math.abs(min)<30)
-          {
-            throw new RuntimeException("Error: Veterinarian has an overlapping appointment!");
-          }
-        }
-      }
+    //       if(Math.abs(min)<30)
+    //       {
+    //         throw new RuntimeException("Error: Veterinarian has an overlapping appointment!");
+    //       }
+    //     }
+    //   }
 
-      appointment.setStatus(Appointment.STATUS.SCHEDULED);
-      appointmentRepository.save(appointment);
+    //   appointment.setStatus(Appointment.STATUS.SCHEDULED);
+    //   appointmentRepository.save(appointment);
 
       
+    // }
+    public Appointment saveAppointment(Appointment appointment)
+    {
+
+       List<Appointment> vetAppointments = appointmentRepository.findAll();
+
+       for (Appointment exist : vetAppointments) 
+        {
+  
+             if (exist.getVeterinarian().equals(appointment.getVeterinarian())) {
+ 
+               long min = java.time.Duration
+                      .between(exist.getAppointmentDate(),
+                              appointment.getAppointmentDate())
+                     .toMinutes();
+
+             if (Math.abs(min) < 30) {
+                throw new RuntimeException(
+                        "Error: Veterinarian has an overlapping appointment!");
+            }
+        }
+    }
+
+    appointment.setStatus(Appointment.STATUS.SCHEDULED);
+
+    return appointmentRepository.save(appointment);
     }
 
     public Appointment updateStatus(Long id,String status)
