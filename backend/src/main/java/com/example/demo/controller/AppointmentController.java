@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.model.Appointment;
 import com.example.demo.service.AppointmentService;
 
 @CrossOrigin
@@ -22,7 +23,7 @@ public class AppointmentController {
     }
   
     @GetMapping
-    public 
+    public List<Appointment> getAppointments(@)
 
 
     
