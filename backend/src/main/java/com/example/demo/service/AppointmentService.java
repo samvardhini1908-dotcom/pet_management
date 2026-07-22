@@ -15,12 +15,13 @@ public class AppointmentService {
     @Autowired
     AppointmentRepository appointmentRepository;
 
-    List<Appointment>getAllAppointments()
+    public List<Appointment>getAllAppointments()
     {
         return appointmentRepository.findAll();
     }
 
-    void scheduleAppointment(Appointment appointment)
+    // public void scheduleAppointment(Appointment appointment)
+    public Appointment saveAppointment(Appointment appointment)
     {
       List<Appointment> vetAppointments=appointmentRepository.findAll();
       for(Appointment exist : vetAppointments)
@@ -42,7 +43,7 @@ public class AppointmentService {
       
     }
 
-    Appointment updateStatus(Long id,String status)
+    public Appointment updateStatus(Long id,String status)
     {
 
         Appointment appointment=appointmentRepository.findById(id).orElseThrow();
