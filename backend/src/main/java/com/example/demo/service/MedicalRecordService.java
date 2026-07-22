@@ -17,17 +17,17 @@ public class MedicalRecordService {
     @Autowired
     MedicalRecordRepository medicalRecordRepository;
 
-    List<MedicalRecord>getAllRecords()
+    public  List<MedicalRecord>getAllRecords()
     {
         return medicalRecordRepository.findAll();
     }
 
-    MedicalRecord saveRecord(MedicalRecord record)
+    public MedicalRecord saveRecord(MedicalRecord record)
     {
         return medicalRecordRepository.save(record);
     }
 
-    List<MedicalRecord> getRecordsByPetId(Long petId)
+    public List<MedicalRecord> getRecordsByPetId(Long petId)
     {
         return medicalRecordRepository.findAll()
         .stream()
@@ -35,7 +35,7 @@ public class MedicalRecordService {
         .collect(Collectors.toList());
     }
 
-    MedicalRecord approveRecord(Long id)
+    public MedicalRecord approveRecord(Long id)
     {
         MedicalRecord record=medicalRecordRepository.findById(id).orElseThrow(()->new RuntimeException("Record not found"));
         record.setStatus(MedicalRecord.STATUS.APPROVED);
