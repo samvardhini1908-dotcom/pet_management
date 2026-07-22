@@ -50,7 +50,7 @@ public class AdoptionController {
         @PathVariable Long id,
         @RequestParam String status)
         {
-            return 
+            return adoptionService.updateStatus(id,status);
         }
     )
     
