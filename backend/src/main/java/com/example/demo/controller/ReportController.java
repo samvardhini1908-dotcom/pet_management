@@ -30,6 +30,14 @@ public class ReportController {
     private MedicalRecordRepository medicalRecordRepository;
 
     @GetMapping("/vaccinations")
+    public Map<String,Object> getVaccinationReport()
+    {
+        Map<String,Object> report = new HashMap<>();
+        report.put("total", vaccinationRepository.count());
+        return report;
+    }
+
+    @GetMapping("/vaccinations")
     public Map<String,Object> getAdoptionsReport()
     {
         Map<String,Object> report = new HashMap<>();
@@ -37,6 +45,14 @@ public class ReportController {
         return report;
     }
 
-    @Ge
+    @GetMapping("/vaccinations")
+    public Map<String,Object> getMedicalReport()
+    {
+        Map<String,Object> report = new HashMap<>();
+        report.put("total", medicalRecordRepository.count());
+        return report;
+    }
+
+    
     
 }
