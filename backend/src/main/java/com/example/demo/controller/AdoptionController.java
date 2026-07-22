@@ -52,7 +52,7 @@ public class AdoptionController {
         {
             return adoptionService.updateStatus(id,status);
         }
-    )
+    
     
      
     
