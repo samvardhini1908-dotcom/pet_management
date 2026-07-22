@@ -22,7 +22,7 @@ public class AppointmentController {
     }
   
     @GetMapping
-    public List
+    public 
 
 
     
