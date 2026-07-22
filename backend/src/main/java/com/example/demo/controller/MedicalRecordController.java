@@ -48,6 +48,10 @@ public class MedicalRecordController {
         return medicalRecordService.getRecordsByPetId(id);
     }
 
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
+    public 
+
    
     
     
