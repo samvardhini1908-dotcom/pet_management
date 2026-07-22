@@ -48,7 +48,10 @@ public class AdoptionController {
     @PreAuthorize("hasRole('SHELTER') or hasRole('ADMIN')")
     public AdoptionRequest updateAdoptionStatus(
         @PathVariable Long id,
-        @RequestParam
+        @RequestParam String status)
+        {
+            return 
+        }
     )
     
      
