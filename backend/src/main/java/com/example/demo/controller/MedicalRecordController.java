@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,12 +13,19 @@ import com.example.demo.service.MedicalRecordService;
 @RequestMapping("/api/medical-records")
 public class MedicalRecordController {
     private final MedicalRecordService medicalRecordService;
-
+    
+    @Autowired
     public MedicalRecordController(MedicalRecordService medicalRecordService) {
         this.medicalRecordService = medicalRecordService;
     }
 
-    @Autowired
+    @GetMapping
+    public List<MedicalRecord> getAllRecords()
+    {
+        return 
+    }
+
+   
     
     
 }
