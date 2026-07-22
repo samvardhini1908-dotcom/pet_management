@@ -38,12 +38,9 @@ public class MedicalRecordController {
 
     @PostMapping
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public MedicalRecord saveMedicalRecord(@RequestBody MedicalRecord record) 
+    public MedicalRecord savedMedicalRecord(@RequestBody MedicalRecord record)
     {
-
-    record.setStatus(MedicalRecord.STATUS.PENDING);
-
-    return medicalRecordService.saveRecord(record);
+        return medicalRecordService.saveRecord(record);
     }
 
     @GetMapping("/pet/{petId}")
