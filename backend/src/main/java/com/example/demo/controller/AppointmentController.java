@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.Appointment;
 import com.example.demo.service.AppointmentService;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @CrossOrigin
 @RestController
@@ -32,7 +35,12 @@ public class AppointmentController {
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public 
+    public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment)
+    {
+        try{
+            Appointment savedAppointment= appointmentService.saveA
+        }
+    }
 
 
     
