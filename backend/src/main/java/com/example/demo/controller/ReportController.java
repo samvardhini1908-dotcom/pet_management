@@ -1,5 +1,8 @@
 package com.example.demo.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,7 +32,11 @@ public class ReportController {
     @GetMapping("/vaccinations")
     public Map<String,Object> getAdoptionsReport()
     {
-        Map<String
+        Map<String,Object> report = new HashMap<>();
+        report.put("total", adoptionRequestRepository.count());
+        return report;
     }
+
+    @Ge
     
 }
