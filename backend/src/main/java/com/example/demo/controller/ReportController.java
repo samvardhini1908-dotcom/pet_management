@@ -37,7 +37,7 @@ public class ReportController {
         return report;
     }
 
-    @GetMapping("/vaccinations")
+    @GetMapping("/adoptions")
     public Map<String,Object> getAdoptionsReport()
     {
         Map<String,Object> report = new HashMap<>();
@@ -45,7 +45,7 @@ public class ReportController {
         return report;
     }
 
-    @GetMapping("/vaccinations")
+    @GetMapping("/medical")
     public Map<String,Object> getMedicalReport()
     {
         Map<String,Object> report = new HashMap<>();
