@@ -37,8 +37,10 @@ public class MedicalRecordController {
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
     public MedicalRecord savedMedicalRecord(@RequestBody MedicalRecord record)
     {
-        return medicalRecordService.save
+        return medicalRecordService.saveRecord(record);
     }
+
+    
 
    
     
