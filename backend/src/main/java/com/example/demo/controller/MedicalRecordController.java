@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.MedicalRecord;
@@ -38,9 +38,12 @@ public class MedicalRecordController {
 
     @PostMapping
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public MedicalRecord savedMedicalRecord(@RequestBody MedicalRecord record)
+    public MedicalRecord saveMedicalRecord(@RequestBody MedicalRecord record) 
     {
-        return medicalRecordService.saveRecord(record);
+
+    record.setStatus(MedicalRecord.STATUS.PENDING);
+
+    return medicalRecordService.saveRecord(record);
     }
 
     @GetMapping("/pet/{petId}")
@@ -49,14 +52,11 @@ public class MedicalRecordController {
         return medicalRecordService.getRecordsByPetId(petId);
     }
 
-    @PostMapping
+    @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public MedicalRecord saveMedicalRecord(@RequestBody MedicalRecord record) 
+    public MedicalRecord approvedRecords(@PathVariable Long id)
     {
-
-    record.setStatus(MedicalRecord.STATUS.PENDING);
-
-    return medicalRecordService.saveRecord(record);
+        return medicalRecordService.approveRecord(id);
     }
 
    
