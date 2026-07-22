@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,8 +39,11 @@ public class AdoptionController {
     public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest adoptionRequest)
     {
         adoptionRequest.setStatus("PENDING");
-        return adoptionService.saveRequest
+        return adoptionService.saveRequest(adoptionRequest);
     }
+
+    @PutMapping
+    @PreAuthorize("hasRole('SHELTER') or hasRole('ADMIN')")
     
      
     
