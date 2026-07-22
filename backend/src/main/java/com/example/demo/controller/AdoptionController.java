@@ -41,16 +41,16 @@ public class AdoptionController {
     public AdoptionRequest createAdoptionRequest(@RequestBody AdoptionRequest adoptionRequest)
     {
         adoptionRequest.setStatus("PENDING");
-        return adoptionService.saveRequest(adoptionRequest);
+        return adoptionService.createRequest(adoptionRequest);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('SHELTER') or hasRole('ADMIN')")
     public AdoptionRequest updateAdoptionStatus(
         @PathVariable Long id,
         @RequestParam String status)
         {
-            return adoptionService.updateStatus(id,status);
+            return adoptionService.updateRequestStatus(id,status);
         }
     
     
