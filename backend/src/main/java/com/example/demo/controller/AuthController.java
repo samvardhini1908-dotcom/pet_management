@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.MessageResponse;
@@ -19,6 +20,8 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
 
+
+@RequestMapping("/api/auth")
 @RestController
 @CrossOrigin(origins = "*",maxAge = 3600)
 
