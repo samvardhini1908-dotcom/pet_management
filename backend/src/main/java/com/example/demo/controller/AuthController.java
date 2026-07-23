@@ -28,20 +28,16 @@ public class AuthController {
      @Autowired
     private AuthService authService;
 
-    // LOGIN
-    @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(
-            @RequestBody LoginRequest loginRequest) {
+   @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) 
+   {
+    return authService.login(request);
+   }
 
-        return ResponseEntity.ok(authService.login(loginRequest));
-    }
-
-    // REGISTER
     @PostMapping("/register")
-    public ResponseEntity<MessageResponse> register(
-            @RequestBody RegisterRequest registerRequest) {
-
-        return authService.register(registerRequest);
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request)
+    {
+    return authService.register(request);
     }
 
     // ADMIN - GET ALL USERS
