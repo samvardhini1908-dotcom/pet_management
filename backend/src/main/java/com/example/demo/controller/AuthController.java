@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.example.demo.dto.JwtResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.dto.RegisterRequest;
@@ -40,7 +38,7 @@ public class AuthController {
     return authService.register(request);
     }
 
-    // ADMIN - GET ALL USERS
+   
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public List<User> getAllUsers() {
@@ -48,7 +46,7 @@ public class AuthController {
         return authService.getAllUsers();
     }
 
-    // ADMIN - UPDATE USER
+    
     @PutMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MessageResponse> updateUser(
@@ -61,14 +59,14 @@ public class AuthController {
                 new MessageResponse("User updated successfully"));
     }
 
-    // PUBLIC - GET ALL VETS
+    
     @GetMapping("/vets")
     public List<User> getAllVets() {
 
         return authService.getAllVets();
     }
 
-    // ADMIN - DELETE USER
+    
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MessageResponse> deleteUser(
