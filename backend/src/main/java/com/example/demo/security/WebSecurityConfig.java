@@ -9,9 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,21 +23,18 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
 @Configuration
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    AuthTokenFilter authTokenFilter;
+    private AuthTokenFilter authTokenFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 
@@ -49,7 +45,6 @@ public class WebSecurityConfig {
                 new DaoAuthenticationProvider();
 
         provider.setUserDetailsService(userDetailsService);
-
         provider.setPasswordEncoder(passwordEncoder());
 
         return provider;
@@ -90,40 +85,46 @@ public class WebSecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration);
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http)
+    public SecurityFilterChain filterChain(HttpSecurity http)
             throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .cors(cors -> {})
-                .sessionManagement(
-                        session ->
-                                session.sessionCreationPolicy(
-                                        SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(
-                                                "/api/auth/login",
-                                                "/api/auth/register")
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated());
 
-        http.authenticationProvider(
-                authenticationProvider());
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
 
-        http.addFilterBefore(
-                authTokenFilter,
-                UsernamePasswordAuthenticationFilter.class);
+                .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(
+                                "/api/auth/**",
+
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+
+                        ).permitAll()
+
+                        .anyRequest()
+                        .authenticated())
+
+                .authenticationProvider(authenticationProvider())
+
+                .addFilterBefore(
+                        authTokenFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
