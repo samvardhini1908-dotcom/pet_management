@@ -3,6 +3,7 @@ package com.example.demo.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,19 +22,19 @@ import com.example.demo.security.JwtUtils;
 public class AuthService {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private JwtUtils jwtUtils;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder encoder;
+    private PasswordEncoder encoder;
 
     // LOGIN
-    public JwtResponse login(LoginRequest request) {
+    public ResponseEntity<?> login(LoginRequest request) {
 
         Authentication authentication =
                 authenticationManager.authenticate(
@@ -45,20 +46,24 @@ public class AuthService {
 
         User user = userRepository
                 .findByUsername(request.getUsername())
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
-        return new JwtResponse(
+        JwtResponse response = new JwtResponse(
                 jwt,
                 user.getId(),
                 user.getUsername(),
                 user.getRole().name());
+
+        return ResponseEntity.ok(response);
     }
 
     // REGISTER
-    public MessageResponse register(RegisterRequest request) {
+    public ResponseEntity<?> register(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            return new MessageResponse("Error: Username is already taken!");
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Username is already taken!"));
         }
 
         User user = new User();
@@ -73,7 +78,8 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new MessageResponse("User registered successfully!");
+        return ResponseEntity.ok(
+                new MessageResponse("User registered successfully!"));
     }
 
     // ADMIN
@@ -82,16 +88,22 @@ public class AuthService {
     }
 
     public MessageResponse deleteUser(Long id) {
+
         userRepository.deleteById(id);
+
         return new MessageResponse("User deleted successfully");
     }
 
-    public MessageResponse updateUser(Long id, RegisterRequest request) {
+    public MessageResponse updateUser(Long id,
+                                      RegisterRequest request) {
 
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
         user.setRole(User.ROLE.valueOf(request.getRole()));
 
         userRepository.save(user);
@@ -103,7 +115,7 @@ public class AuthService {
 
         return userRepository.findAll()
                 .stream()
-                .filter(u -> u.getRole().name().equals("ROLE_VET"))
+                .filter(user -> user.getRole() == User.ROLE.ROLE_VET)
                 .toList();
     }
 }
