@@ -12,7 +12,7 @@ import com.example.demo.model.Vaccination;
 public interface VaccinationRepository extends JpaRepository<Vaccination,Long>{
 
     List<Vaccination>findByPet(Pet pet);
-    // List<Vaccination>getUpcomingReminders();
+    List<Vaccination>getUpcomingReminders();
     List<Vaccination> findByNextDueDateAfter(LocalDate date);
     
 } 
