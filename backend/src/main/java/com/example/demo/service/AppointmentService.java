@@ -20,27 +20,27 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    // public void scheduleAppointment(Appointment appointment)
-    // {
-    //   List<Appointment> vetAppointments=appointmentRepository.findAll();
-    //   for(Appointment exist : vetAppointments)
-    //     {
-    //     if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
-    //     {
-    //       long min=java.time.Duration.between(exist.getAppointmentDate(),appointment.getAppointmentDate()).toMinutes();
+    public void scheduleAppointment(Appointment appointment)
+    {
+      List<Appointment> vetAppointments=appointmentRepository.findAll();
+      for(Appointment exist : vetAppointments)
+        {
+        if(exist.getVeterinarian().equals(appointment.getVeterinarian()))
+        {
+          long min=java.time.Duration.between(exist.getAppointmentDate(),appointment.getAppointmentDate()).toMinutes();
 
-    //       if(Math.abs(min)<30)
-    //       {
-    //         throw new RuntimeException("Error: Veterinarian has an overlapping appointment!");
-    //       }
-    //     }
-    //   }
+          if(Math.abs(min)<30)
+          {
+            throw new RuntimeException("Error: Veterinarian has an overlapping appointment!");
+          }
+        }
+      }
 
-    //   appointment.setStatus(Appointment.STATUS.SCHEDULED);
-    //   appointmentRepository.save(appointment);
+      appointment.setStatus(Appointment.STATUS.SCHEDULED);
+      appointmentRepository.save(appointment);
 
       
-    // }
+    }
     public Appointment saveAppointment(Appointment appointment)
     {
 
