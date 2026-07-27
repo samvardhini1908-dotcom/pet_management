@@ -52,6 +52,6 @@ public class VaccinationServiceImpl implements VaccinationService {
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.minusDays(1);
         LocalDate endDate = today.plusDays(7);
-        return vaccinationRepository.findByNextDueDateBetween(startDate, endDate);
+        return vaccinationRepository.findByNextDueDateAfter(startDate, endDate);
     }
 }

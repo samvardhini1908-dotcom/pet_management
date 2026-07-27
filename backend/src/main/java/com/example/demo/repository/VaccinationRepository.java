@@ -15,7 +15,7 @@ public interface VaccinationRepository extends JpaRepository<Vaccination,Long>{
 
     List<Vaccination>findByPet(Pet pet);
     List<Vaccination>getUpcomingReminders();
-    // List<Vaccination> findByNextDueDateAfter();
+    List<Vaccination> findByNextDueDateAfter(LocalDate date);
     @Query("SELECT v FROM Vaccination v WHERE v.nextDueDate BETWEEN :start AND :end")
     List<Vaccination> findUpcomingReminders(@Param("start") LocalDate start, @Param("end") LocalDate end);
     
