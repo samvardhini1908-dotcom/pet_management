@@ -48,7 +48,12 @@ public class VaccinationServiceImpl implements VaccinationService {
     }
 
     @Override
-    public List<Vaccination> getUpcomingReminders() {
-        return vaccinationRepository.findByNextDueDateAfter(LocalDate.now());
+   
+
+      public List<Vaccination> getUpcomingReminders() {
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(1);
+        LocalDate endDate = today.plusDays(7);
+        return vaccinationRepository.findByNextDueDateBetween(startDate, endDate);
     }
 }
