@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.model.Appointment;
 import com.example.demo.model.Pet;
 import com.example.demo.model.Vaccination;
+import com.example.demo.repository.AppointmentRepository;
 import com.example.demo.repository.VaccinationRepository;
 
 @Service
@@ -18,6 +20,7 @@ public class VaccinationServiceImpl implements VaccinationService {
 
     @Autowired
     private VaccinationRepository vaccinationRepository;
+    private AppointmentRepository appointmentRepository;
 
     @Override
     public List<Vaccination> getAllVaccinations() {
@@ -45,7 +48,7 @@ public class VaccinationServiceImpl implements VaccinationService {
     }
 
     @Override
-    public List<Vaccination> getUpcomingReminders() {
-        return vaccinationRepository.findByNextDueDateAfter(LocalDate.now());
+    public List<Appointment> getUpcomingReminders() {
+        return appointmentRepository.findByNextDueDateAfter(LocalDate.now());
     }
 }
