@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import MainLayout from './layout/MainLayout';
+import { Provider } from 'react-redux';
+import store from './store/store';
 
-// Page Imports
+import MainLayout from './layout/MainLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -17,90 +18,89 @@ import Reports from './pages/Reports';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Auth routes without MainLayout */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <Provider store={store}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Core application routes wrapped inside MainLayout */}
-        <Route
-          path="/"
-          element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/pets"
-          element={
-            <MainLayout>
-              <PetManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/vaccinations"
-          element={
-            <MainLayout>
-              <VaccinationTracker />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/medical"
-          element={
-            <MainLayout>
-              <MedicalRecords />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/adoptions"
-          element={
-            <MainLayout>
-              <AdoptionCenter />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/appointments"
-          element={
-            <MainLayout>
-              <AppointmentScheduler />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/users"
-          element={
-            <MainLayout>
-              <UserManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <MainLayout>
-              <Reports />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/adoption-requests"
-          element={
-            <MainLayout>
-              <AdoptionRequests />
-            </MainLayout>
-          }
-        />
+          <Route
+            path="/"
+            element={
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/pets"
+            element={
+              <MainLayout>
+                <PetManagement />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/vaccinations"
+            element={
+              <MainLayout>
+                <VaccinationTracker />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/medical"
+            element={
+              <MainLayout>
+                <MedicalRecords />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/adoptions"
+            element={
+              <MainLayout>
+                <AdoptionCenter />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/appointments"
+            element={
+              <MainLayout>
+                <AppointmentScheduler />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <MainLayout>
+                <UserManagement />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <MainLayout>
+                <Reports />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/adoption-requests"
+            element={
+              <MainLayout>
+                <AdoptionRequests />
+              </MainLayout>
+            }
+          />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    </Provider>
   );
 }
 
