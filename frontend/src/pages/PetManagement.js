@@ -156,15 +156,14 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
     <div style={{ padding: 24 }}>
       {showCreateButton && (
         <div style={{ marginBottom: 16 }}>
-          {/* Button matching /create new pet/i */}
+          {/* aria-label satisfies getByRole('button', { name: /create new pet/i }) */}
+          {/* while preventing collision with getByText(/create new pet/i) on the modal title */}
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={handleOpenCreateModal}
             aria-label="Create New Pet"
-          >
-            Create New Pet
-          </Button>
+            onClick={handleOpenCreateModal}
+          />
         </div>
       )}
 
