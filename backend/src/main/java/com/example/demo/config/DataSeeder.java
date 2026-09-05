@@ -28,7 +28,6 @@ public class DataSeeder {
 
     @Bean
     CommandLineRunner seedDatabase(
-
             UserRepository userRepository,
             ShelterRepository shelterRepository,
             PetRepository petRepository,
@@ -39,16 +38,27 @@ public class DataSeeder {
             PasswordEncoder encoder) {
 
         return args -> {
-
-            // Don't insert again if data already exists
+            // Check if users already exist; if they do, update their passwords to valid BCrypt hashes
             if (userRepository.count() > 0) {
+                userRepository.findByUsername("admin").ifPresent(user -> {
+                    user.setPassword(encoder.encode("admin123"));
+                    userRepository.save(user);
+                });
+                userRepository.findByUsername("owner").ifPresent(user -> {
+                    user.setPassword(encoder.encode("owner123"));
+                    userRepository.save(user);
+                });
+                userRepository.findByUsername("vet").ifPresent(user -> {
+                    user.setPassword(encoder.encode("vet123"));
+                    userRepository.save(user);
+                });
+                System.out.println("Default user credentials verified and updated with BCrypt hashes.");
                 return;
             }
 
             // ==========================
             // ADMIN
             // ==========================
-
             User admin = User.builder()
                     .username("admin")
                     .password(encoder.encode("admin123"))
@@ -61,7 +71,6 @@ public class DataSeeder {
             // ==========================
             // OWNER
             // ==========================
-
             User owner = User.builder()
                     .username("owner")
                     .password(encoder.encode("owner123"))
@@ -74,7 +83,6 @@ public class DataSeeder {
             // ==========================
             // VET
             // ==========================
-
             User vet = User.builder()
                     .username("vet")
                     .password(encoder.encode("vet123"))
@@ -91,19 +99,15 @@ public class DataSeeder {
             // ==========================
             // SHELTER
             // ==========================
-
             Shelter shelter = new Shelter();
-
             shelter.setShelterName("Happy Paws Shelter");
             shelter.setLocation("Chennai");
             shelter.setCapacity(100);
-
             shelterRepository.save(shelter);
 
             // ==========================
             // PET
             // ==========================
-
             Pet pet = Pet.builder()
                     .petName("Bruno")
                     .species("Dog")
@@ -121,7 +125,6 @@ public class DataSeeder {
             // ==========================
             // VACCINATION
             // ==========================
-
             Vaccination vaccination = Vaccination.builder()
                     .vaccineName("Rabies")
                     .vaccinationDate(LocalDate.now())
@@ -135,7 +138,6 @@ public class DataSeeder {
             // ==========================
             // MEDICAL RECORD
             // ==========================
-
             MedicalRecord medicalRecord = MedicalRecord.builder()
                     .diagnosis("Fever")
                     .prescription("Paracetamol for 5 days")
@@ -150,7 +152,6 @@ public class DataSeeder {
             // ==========================
             // APPOINTMENT
             // ==========================
-
             Appointment appointment = Appointment.builder()
                     .appointmentDate(LocalDateTime.now().plusDays(2))
                     .purpose("General Checkup")
@@ -164,7 +165,6 @@ public class DataSeeder {
             // ==========================
             // ADOPTION REQUEST
             // ==========================
-
             AdoptionRequest adoptionRequest = AdoptionRequest.builder()
                     .requestDate(LocalDate.now())
                     .status(AdoptionRequest.STATUS.PENDING)
@@ -177,22 +177,6 @@ public class DataSeeder {
             System.out.println("======================================");
             System.out.println(" Sample Data Loaded Successfully");
             System.out.println("======================================");
-
-            System.out.println("ADMIN");
-            System.out.println("Username : admin");
-            System.out.println("Password : admin123");
-
-            System.out.println();
-
-            System.out.println("OWNER");
-            System.out.println("Username : owner");
-            System.out.println("Password : owner123");
-
-            System.out.println();
-
-            System.out.println("VET");
-            System.out.println("Username : vet");
-            System.out.println("Password : vet123");
         };
     }
 }
