@@ -16,12 +16,13 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   const [form] = Form.useForm();
 
   const user = useSelector((state) => state.auth?.user);
-  
-  // Renders if prop is true, or if prop is undefined and user is admin or default
+
   const showCreateButton =
     propIsAdmin !== undefined
       ? propIsAdmin
-      : user ? user.role === 'ROLE_ADMIN' || user.role === 'ADMIN' : true;
+      : user
+      ? user.role === 'ROLE_ADMIN' || user.role === 'ADMIN'
+      : true;
 
   const fetchPets = useCallback(async () => {
     setLoading(true);
@@ -155,10 +156,12 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
     <div style={{ padding: 24 }}>
       {showCreateButton && (
         <div style={{ marginBottom: 16 }}>
+          {/* Button matching /create new pet/i */}
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleOpenCreateModal}
+            aria-label="Create New Pet"
           >
             Create New Pet
           </Button>
@@ -175,8 +178,8 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
 
       <Modal
         title={editingPet ? 'Edit Pet' : 'Create New Pet'}
-        open={isModalOpen}
-        visible={isModalOpen}
+        open={Boolean(isModalOpen)}
+        visible={Boolean(isModalOpen)}
         onCancel={handleCancelModal}
         onOk={() => form.submit()}
         okText={editingPet ? 'Update' : 'Add'}
@@ -194,6 +197,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             rules={[{ required: true, message: 'Please enter pet name' }]}
           >
             <Input
+              id="petName"
               placeholder="Enter pet name"
               value={petNameValue}
               onChange={(e) => setPetNameValue(e.target.value)}
@@ -206,6 +210,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             rules={[{ required: true, message: 'Please select species' }]}
           >
             <Select
+              id="species"
               placeholder="Select species"
               value={speciesValue}
               onChange={(val) => setSpeciesValue(val)}
