@@ -1,10 +1,15 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './authSlice';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import store from './store/store';
+import App from './App';
+import 'antd/dist/reset.css';
 
-const store = configureStore({
-  reducer: {
-    auth: authReducer,
-  },
-});
-
-export default store;
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </React.StrictMode>
+);
