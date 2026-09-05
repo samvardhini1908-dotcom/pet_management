@@ -1,14 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-import store from './store/store'; // Make sure this path points to your store file
-import App from './App';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './authSlice';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </React.StrictMode>
-);
+const store = configureStore({
+  reducer: {
+    auth: authReducer,
+  },
+});
+
+export default store;
