@@ -58,76 +58,63 @@ public class WebSecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:3000", "http://localhost:3001"));
+    // Allow both 3000 and 3001
+    configuration.setAllowedOrigins(
+            List.of("http://localhost:3000", "http://localhost:3001"));
 
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"));
+    configuration.setAllowedMethods(
+            List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        configuration.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type"));
+    configuration.setAllowedHeaders(
+            List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
 
-        configuration.setAllowCredentials(true);
+    configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+    source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+    return source;
+}
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http)
-            throws Exception {
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+    http
+        .csrf(csrf -> csrf.disable())
 
-                .cors(cors -> {})
+        // Explicitly pass corsConfigurationSource()
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
+        .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+        .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                        "/api/auth/login",
+                        "/api/auth/register",
+                        "/api/auth/vets",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                ).permitAll()
+                .anyRequest().authenticated())
 
-                        .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/register",
-                                "/api/auth/vets",
+        .authenticationProvider(authenticationProvider())
 
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs",
-                                "/swagger-resources/**",
-                                "/webjars/**"
+        .addFilterBefore(
+                authTokenFilter,
+                UsernamePasswordAuthenticationFilter.class);
 
-                        ).permitAll()
-
-                        .anyRequest()
-                        .authenticated())
-
-                .authenticationProvider(authenticationProvider())
-
-                .addFilterBefore(
-                        authTokenFilter,
-                        UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
+    return http.build();
+}
 }
