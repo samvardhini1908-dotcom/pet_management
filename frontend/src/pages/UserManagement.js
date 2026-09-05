@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Popconfirm, Tag, Space, orientation, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Popconfirm, Tag, Space, message } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import api from '../services/api'; // adjust path to your API/axios instance
+import api from '../services/api';
 
 const { Option } = Select;
 
