@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Button, Modal, Empty, Spin, message, Typography, Tag } from 'antd';
+import { Row, Col, Card, Button, Modal, Empty, Spin, message, Typography } from 'antd';
 import { useSelector } from 'react-redux';
-import api from '../services/api'; // adjust path to your API/axios instance
+import api from '../services/api';
 
 const { Meta } = Card;
 const { Text } = Typography;
@@ -10,7 +10,6 @@ const AdoptionCenter = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Retrieve current user for applicant.id
   const user = useSelector((state) => state.auth?.user);
 
   const fetchAvailablePets = useCallback(async () => {
@@ -57,7 +56,7 @@ const AdoptionCenter = () => {
     <div style={{ padding: 24 }}>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px 0' }}>
-          <Spin orientation="large" />
+          <Spin size="large" />
         </div>
       ) : pets.length === 0 ? (
         <Empty description="No pets available for adoption at the moment." />

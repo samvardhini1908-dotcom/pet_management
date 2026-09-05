@@ -2,8 +2,8 @@ import React from 'react';
 import { Layout, Menu, Button } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import authService from '../services/authService'; // adjust path if needed
-import { logout } from '../redux/authSlice'; // adjust path if needed
+import authService from '../services/authService';
+import { logout } from '../store/authSlice';
 
 const { Header, Sider, Content } = Layout;
 
@@ -12,10 +12,8 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  // Retrieve authenticated user from Redux state
   const user = useSelector((state) => state.auth?.user);
 
-  // Always-visible menu items
   const menuItems = [
     { key: '/', label: 'Dashboard' },
     { key: '/pets', label: 'My Pets' },
@@ -25,7 +23,6 @@ const MainLayout = ({ children }) => {
     { key: '/appointments', label: 'Appointments' },
   ];
 
-  // When user?.role === 'ROLE_ADMIN'
   if (user?.role === 'ROLE_ADMIN') {
     menuItems.push({
       key: '/users',
@@ -33,7 +30,6 @@ const MainLayout = ({ children }) => {
     });
   }
 
-  // When user?.role === 'ROLE_ADMIN' or 'ROLE_SHELTER'
   if (user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SHELTER') {
     menuItems.push(
       { key: '/reports', label: 'Reports' },
@@ -46,18 +42,12 @@ const MainLayout = ({ children }) => {
   };
 
   const handleLogout = () => {
-    // Call authService logout if defined
     if (authService && typeof authService.logout === 'function') {
       authService.logout();
     }
-    // Remove local storage items as explicitly required by tests
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-
-    // Dispatch redux logout action
     dispatch(logout());
-
-    // Navigate to login
     navigate('/login');
   };
 
@@ -77,7 +67,6 @@ const MainLayout = ({ children }) => {
           PetPulse
         </div>
 
-        {/* Essential for test suite: screen.getByRole('navigation') */}
         <nav role="navigation" style={{ flex: 1 }}>
           <Menu
             mode="inline"

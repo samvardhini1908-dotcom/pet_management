@@ -1,19 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Card, Statistic, Progress, Spin, message } from 'antd';
 import { useSelector } from 'react-redux';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import api from '../services/api'; // adjust path to your axios/api instance
+import api from '../services/api';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -47,7 +37,6 @@ const Dashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  // Metric Computations
   const totalPets = pets.length;
   const pendingVaccinations = vaccinations.filter((v) => v.status === 'PENDING').length;
   const pendingAdoptions = adoptions.filter((a) => a.status === 'PENDING').length;
@@ -55,16 +44,13 @@ const Dashboard = () => {
   const maxCapacity = 50;
   const capacityPercentage = Math.min(Math.round((shelterPetsCount / maxCapacity) * 100), 100);
 
-  // Month bucket helper for Jan - Jun
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-
   const getMonthlyCounts = (dataList, dateField) => {
     const counts = [0, 0, 0, 0, 0, 0];
     dataList.forEach((item) => {
       const rawDate = item[dateField];
       if (rawDate) {
         const d = new Date(rawDate);
-        const monthIdx = d.getMonth(); // 0 = Jan, 5 = Jun
+        const monthIdx = d.getMonth();
         if (monthIdx >= 0 && monthIdx <= 5) {
           counts[monthIdx] += 1;
         }
@@ -73,35 +59,9 @@ const Dashboard = () => {
     return counts;
   };
 
-  const chartData = {
-    labels: months,
-    datasets: [
-      {
-        label: 'Vaccinations',
-        data: getMonthlyCounts(vaccinations, 'vaccinationDate'),
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-      },
-      {
-        label: 'Adoptions',
-        data: getMonthlyCounts(adoptions, 'requestDate'),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Vaccinations & Adoptions Overview',
-      },
-    },
-  };
+  const vaccCounts = getMonthlyCounts(vaccinations, 'vaccinationDate');
+  const adoptCounts = getMonthlyCounts(adoptions, 'requestDate');
+  const maxValue = Math.max(...vaccCounts, ...adoptCounts, 5);
 
   if (loading) {
     return (
@@ -113,7 +73,6 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      {/* Stat Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -140,7 +99,6 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Shelter / Admin Capacity Progress Bar */}
       {isShelterOrAdmin && (
         <Card title="Shelter Capacity Status" style={{ marginTop: 24 }}>
           <Progress
@@ -151,10 +109,48 @@ const Dashboard = () => {
         </Card>
       )}
 
-      {/* Bar Chart Section */}
-      <Card title="Trends" style={{ marginTop: 24 }}>
-        <div style={{ height: 350 }}>
-          <Bar data={chartData} options={chartOptions} />
+      <Card title="Vaccinations and Adoptions Overview" style={{ marginTop: 24 }}>
+        <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 14, height: 14, backgroundColor: '#1890ff', display: 'inline-block' }}></span>
+            <span>Vaccinations</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 14, height: 14, backgroundColor: '#52c41a', display: 'inline-block' }}></span>
+            <span>Adoptions</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', height: 260, alignItems: 'flex-end', gap: 16, paddingTop: 20 }}>
+          {months.map((month, idx) => {
+            const vaccHeight = (vaccCounts[idx] / maxValue) * 200;
+            const adoptHeight = (adoptCounts[idx] / maxValue) * 200;
+            return (
+              <div key={month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 200 }}>
+                  <div
+                    title={`Vaccinations: ${vaccCounts[idx]}`}
+                    style={{
+                      width: 18,
+                      height: `${vaccHeight}px`,
+                      backgroundColor: '#1890ff',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  />
+                  <div
+                    title={`Adoptions: ${adoptCounts[idx]}`}
+                    style={{
+                      width: 18,
+                      height: `${adoptHeight}px`,
+                      backgroundColor: '#52c41a',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  />
+                </div>
+                <span style={{ marginTop: 8, fontSize: 12 }}>{month}</span>
+              </div>
+            );
+          })}
         </div>
       </Card>
     </div>

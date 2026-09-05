@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import authService from '../services/authService'; // adjust path if located elsewhere, e.g., '../services/auth'
-import { loginSuccess } from '../redux/authSlice'; // adjust path to your redux slice/action
+import authService from '../services/authService';
+import { loginSuccess } from '../store/authSlice';
 
 const { Title, Text } = Typography;
 
@@ -16,8 +16,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await authService.login(values.username, values.password);
-      
-      // authService.login() sets localStorage as specified, but safely ensure items are set if test mocks raw response
+
       if (response?.data) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data));
