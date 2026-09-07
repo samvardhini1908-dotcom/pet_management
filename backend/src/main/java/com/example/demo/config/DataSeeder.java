@@ -114,7 +114,7 @@ public class DataSeeder {
                     .breed("Labrador")
                     .age(3)
                     .gender("Male")
-                    .imageUrl("https://example.com/dog.jpg")
+                    .imageUrl("https://headsupfortails.com/cdn/shop/articles/Labrador_Retriever_Dog_Breed_dea12ce1-775e-464f-877a-08f2001ddd75.jpg")
                     .owner(owner)
                     .shelter(shelter)
                     .availableForAdoption(true)
