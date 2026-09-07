@@ -10,7 +10,8 @@ const Dashboard = () => {
   const [adoptions, setAdoptions] = useState([]);
 
   const user = useSelector((state) => state.auth?.user);
-  const isShelterOrAdmin = user?.role === 'ROLE_SHELTER' || user?.role === 'ROLE_ADMIN';
+  const isShelterOrAdmin =
+    user?.role === 'ROLE_SHELTER' || user?.role === 'ROLE_ADMIN';
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -42,7 +43,6 @@ const Dashboard = () => {
   const maxCapacity = 50;
   const capacityPercentage = Math.min(Math.round((shelterPetsCount / maxCapacity) * 100), 100);
 
-  // Compute the rolling past 6 months (e.g., Apr, May, Jun, Jul, Aug, Sep)
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonthIdx = new Date().getMonth();
   const past6Months = Array.from({ length: 6 }, (_, i) => {
@@ -75,77 +75,184 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Spin size="large" tip="Loading dashboard metrics..." />
       </div>
     );
   }
 
+  const statCards = [
+    {
+      title: 'Total Pets',
+      value: totalPets,
+      accent: 'linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)',
+      border: '#bae7ff',
+      textColor: '#096dd9',
+    },
+    {
+      title: 'Pending Vaccinations',
+      value: pendingVaccinations,
+      accent: 'linear-gradient(135deg, #fa8c16 0%, #ffd666 100%)',
+      border: '#ffe7ba',
+      textColor: '#d46b08',
+    },
+    {
+      title: 'Pending Adoptions',
+      value: pendingAdoptions,
+      accent: 'linear-gradient(135deg, #52c41a 0%, #95de64 100%)',
+      border: '#d9f7be',
+      textColor: '#389e0d',
+    },
+    {
+      title: 'Shelter Capacity',
+      value: `${shelterPetsCount} / ${maxCapacity}`,
+      accent: 'linear-gradient(135deg, #722ed1 0%, #b37feb 100%)',
+      border: '#efdbff',
+      textColor: '#531dab',
+    },
+  ];
+
   return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Total Pets" value={totalPets} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Pending Vaccinations" value={pendingVaccinations} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Pending Adoptions" value={pendingAdoptions} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Shelter Capacity"
-              value={`${shelterPetsCount} / ${maxCapacity}`}
-            />
-          </Card>
-        </Col>
+    <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      {/* KPI Statistic Cards */}
+      <Row gutter={[20, 20]}>
+        {statCards.map((card, idx) => (
+          <Col xs={24} sm={12} lg={6} key={idx}>
+            <Card
+              bordered={false}
+              style={{
+                borderRadius: 14,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                position: 'relative',
+                overflow: 'hidden',
+                border: `1px solid ${card.border}`,
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
+              bodyStyle={{ padding: '20px 24px' }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  background: card.accent,
+                }}
+              />
+              <Statistic
+                title={
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {card.title}
+                  </span>
+                }
+                value={card.value}
+                valueStyle={{
+                  color: card.textColor,
+                  fontWeight: 700,
+                  fontSize: 28,
+                  marginTop: 6,
+                }}
+              />
+            </Card>
+          </Col>
+        ))}
       </Row>
 
+      {/* Shelter Capacity Progress Card */}
       {isShelterOrAdmin && (
-        <Card title="Shelter Capacity Status" style={{ marginTop: 24 }}>
+        <Card
+          title={
+            <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 16 }}>
+              Shelter Capacity Status
+            </span>
+          }
+          bordered={false}
+          style={{
+            marginTop: 24,
+            borderRadius: 14,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+          }}
+          bodyStyle={{ padding: '24px 28px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ color: '#64748b', fontSize: 14 }}>Occupancy Rate</span>
+            <span style={{ color: '#0f172a', fontWeight: 600, fontSize: 14 }}>
+              {shelterPetsCount} of {maxCapacity} slots filled
+            </span>
+          </div>
           <Progress
             percent={capacityPercentage}
             status={capacityPercentage >= 90 ? 'exception' : 'active'}
+            strokeColor={{
+              '0%': '#1890ff',
+              '100%': capacityPercentage >= 90 ? '#ff4d4f' : '#52c41a',
+            }}
+            strokeWidth={12}
             format={() => `${shelterPetsCount} / ${maxCapacity} Pets (${capacityPercentage}%)`}
           />
         </Card>
       )}
 
-      <Card title="Vaccinations and Adoptions Overview" style={{ marginTop: 24 }}>
-        <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 14, height: 14, backgroundColor: '#1890ff', display: 'inline-block', borderRadius: 2 }} />
-            <span>Vaccinations</span>
+      {/* Overview Analytics Bar Chart */}
+      <Card
+        title={
+          <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 16 }}>
+            Vaccinations and Adoptions Overview
+          </span>
+        }
+        bordered={false}
+        style={{
+          marginTop: 24,
+          borderRadius: 14,
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+        }}
+        bodyStyle={{ padding: '24px 28px' }}
+      >
+        {/* Custom Legend */}
+        <div style={{ display: 'flex', gap: 28, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                background: 'linear-gradient(180deg, #36cfc9 0%, #1890ff 100%)',
+                display: 'inline-block',
+                borderRadius: 4,
+              }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>Vaccinations</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 14, height: 14, backgroundColor: '#52c41a', display: 'inline-block', borderRadius: 2 }} />
-            <span>Adoptions</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                background: 'linear-gradient(180deg, #95de64 0%, #52c41a 100%)',
+                display: 'inline-block',
+                borderRadius: 4,
+              }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>Adoptions</span>
           </div>
         </div>
 
+        {/* Visual Responsive Bar Layout */}
         <div
           style={{
             display: 'flex',
-            height: 260,
+            height: 250,
             alignItems: 'flex-end',
             gap: 16,
-            paddingTop: 20,
-            borderBottom: '1px solid #f0f0f0',
+            paddingTop: 24,
+            borderBottom: '2px solid #f1f5f9',
           }}
         >
           {past6Months.map((mObj, idx) => {
             const vaccCount = vaccCounts[idx];
             const adoptCount = adoptCounts[idx];
-            const vaccHeight = vaccCount > 0 ? (vaccCount / maxValue) * 180 : 4;
-            const adoptHeight = adoptCount > 0 ? (adoptCount / maxValue) * 180 : 4;
+            const vaccHeight = vaccCount > 0 ? (vaccCount / maxValue) * 175 : 6;
+            const adoptHeight = adoptCount > 0 ? (adoptCount / maxValue) * 175 : 6;
 
             return (
               <div
@@ -159,42 +266,60 @@ const Dashboard = () => {
                   justifyContent: 'flex-end',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 200 }}>
-                  {/* Vaccinations Bar */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 190 }}>
+                  {/* Vaccinations Column */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {vaccCount > 0 && (
-                      <span style={{ fontSize: 11, color: '#1890ff', marginBottom: 2 }}>{vaccCount}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#1890ff', marginBottom: 4 }}>
+                        {vaccCount}
+                      </span>
                     )}
                     <div
                       title={`Vaccinations: ${vaccCount}`}
                       style={{
-                        width: 20,
+                        width: 22,
                         height: `${vaccHeight}px`,
-                        backgroundColor: vaccCount > 0 ? '#1890ff' : '#e6f7ff',
-                        borderRadius: '4px 4px 0 0',
-                        transition: 'height 0.3s ease',
+                        background:
+                          vaccCount > 0
+                            ? 'linear-gradient(180deg, #40a9ff 0%, #1890ff 100%)'
+                            : '#f0f5ff',
+                        borderRadius: '6px 6px 0 0',
+                        transition: 'height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     />
                   </div>
 
-                  {/* Adoptions Bar */}
+                  {/* Adoptions Column */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {adoptCount > 0 && (
-                      <span style={{ fontSize: 11, color: '#52c41a', marginBottom: 2 }}>{adoptCount}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#52c41a', marginBottom: 4 }}>
+                        {adoptCount}
+                      </span>
                     )}
                     <div
                       title={`Adoptions: ${adoptCount}`}
                       style={{
-                        width: 20,
+                        width: 22,
                         height: `${adoptHeight}px`,
-                        backgroundColor: adoptCount > 0 ? '#52c41a' : '#f6ffed',
-                        borderRadius: '4px 4px 0 0',
-                        transition: 'height 0.3s ease',
+                        background:
+                          adoptCount > 0
+                            ? 'linear-gradient(180deg, #73d13d 0%, #52c41a 100%)'
+                            : '#f6ffed',
+                        borderRadius: '6px 6px 0 0',
+                        transition: 'height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     />
                   </div>
                 </div>
-                <span style={{ marginTop: 8, fontSize: 12, fontWeight: 500, color: '#555' }}>
+
+                <span
+                  style={{
+                    marginTop: 10,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: '#64748b',
+                  }}
+                >
                   {mObj.name}
                 </span>
               </div>
