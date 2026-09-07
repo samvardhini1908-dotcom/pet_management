@@ -3,8 +3,6 @@ import { Row, Col, Card, Statistic, Progress, Spin, message } from 'antd';
 import { useSelector } from 'react-redux';
 import api from '../services/api';
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [pets, setPets] = useState([]);
@@ -44,15 +42,27 @@ const Dashboard = () => {
   const maxCapacity = 50;
   const capacityPercentage = Math.min(Math.round((shelterPetsCount / maxCapacity) * 100), 100);
 
+  // Compute the rolling past 6 months (e.g., Apr, May, Jun, Jul, Aug, Sep)
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentMonthIdx = new Date().getMonth();
+  const past6Months = Array.from({ length: 6 }, (_, i) => {
+    const month = (currentMonthIdx - 5 + i + 12) % 12;
+    return {
+      monthIdx: month,
+      name: monthNames[month],
+    };
+  });
+
   const getMonthlyCounts = (dataList, dateField) => {
     const counts = [0, 0, 0, 0, 0, 0];
     dataList.forEach((item) => {
       const rawDate = item[dateField];
       if (rawDate) {
         const d = new Date(rawDate);
-        const monthIdx = d.getMonth();
-        if (monthIdx >= 0 && monthIdx <= 5) {
-          counts[monthIdx] += 1;
+        const itemMonth = d.getMonth();
+        const slotIdx = past6Months.findIndex((m) => m.monthIdx === itemMonth);
+        if (slotIdx !== -1) {
+          counts[slotIdx] += 1;
         }
       }
     });
@@ -112,42 +122,81 @@ const Dashboard = () => {
       <Card title="Vaccinations and Adoptions Overview" style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 14, height: 14, backgroundColor: '#1890ff', display: 'inline-block' }}></span>
+            <span style={{ width: 14, height: 14, backgroundColor: '#1890ff', display: 'inline-block', borderRadius: 2 }} />
             <span>Vaccinations</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 14, height: 14, backgroundColor: '#52c41a', display: 'inline-block' }}></span>
+            <span style={{ width: 14, height: 14, backgroundColor: '#52c41a', display: 'inline-block', borderRadius: 2 }} />
             <span>Adoptions</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', height: 260, alignItems: 'flex-end', gap: 16, paddingTop: 20 }}>
-          {months.map((month, idx) => {
-            const vaccHeight = (vaccCounts[idx] / maxValue) * 200;
-            const adoptHeight = (adoptCounts[idx] / maxValue) * 200;
+        <div
+          style={{
+            display: 'flex',
+            height: 260,
+            alignItems: 'flex-end',
+            gap: 16,
+            paddingTop: 20,
+            borderBottom: '1px solid #f0f0f0',
+          }}
+        >
+          {past6Months.map((mObj, idx) => {
+            const vaccCount = vaccCounts[idx];
+            const adoptCount = adoptCounts[idx];
+            const vaccHeight = vaccCount > 0 ? (vaccCount / maxValue) * 180 : 4;
+            const adoptHeight = adoptCount > 0 ? (adoptCount / maxValue) * 180 : 4;
+
             return (
-              <div key={month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 200 }}>
-                  <div
-                    title={`Vaccinations: ${vaccCounts[idx]}`}
-                    style={{
-                      width: 18,
-                      height: `${vaccHeight}px`,
-                      backgroundColor: '#1890ff',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
-                  <div
-                    title={`Adoptions: ${adoptCounts[idx]}`}
-                    style={{
-                      width: 18,
-                      height: `${adoptHeight}px`,
-                      backgroundColor: '#52c41a',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
+              <div
+                key={mObj.name}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: '100%',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 200 }}>
+                  {/* Vaccinations Bar */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {vaccCount > 0 && (
+                      <span style={{ fontSize: 11, color: '#1890ff', marginBottom: 2 }}>{vaccCount}</span>
+                    )}
+                    <div
+                      title={`Vaccinations: ${vaccCount}`}
+                      style={{
+                        width: 20,
+                        height: `${vaccHeight}px`,
+                        backgroundColor: vaccCount > 0 ? '#1890ff' : '#e6f7ff',
+                        borderRadius: '4px 4px 0 0',
+                        transition: 'height 0.3s ease',
+                      }}
+                    />
+                  </div>
+
+                  {/* Adoptions Bar */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {adoptCount > 0 && (
+                      <span style={{ fontSize: 11, color: '#52c41a', marginBottom: 2 }}>{adoptCount}</span>
+                    )}
+                    <div
+                      title={`Adoptions: ${adoptCount}`}
+                      style={{
+                        width: 20,
+                        height: `${adoptHeight}px`,
+                        backgroundColor: adoptCount > 0 ? '#52c41a' : '#f6ffed',
+                        borderRadius: '4px 4px 0 0',
+                        transition: 'height 0.3s ease',
+                      }}
+                    />
+                  </div>
                 </div>
-                <span style={{ marginTop: 8, fontSize: 12 }}>{month}</span>
+                <span style={{ marginTop: 8, fontSize: 12, fontWeight: 500, color: '#555' }}>
+                  {mObj.name}
+                </span>
               </div>
             );
           })}
