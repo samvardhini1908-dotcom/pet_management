@@ -7,17 +7,18 @@ import {
   Input,
   Select,
   DatePicker,
+  Popconfirm,
+  Tag,
   Card,
   Row,
   Col,
-  Statistic,
-  Tag,
   Alert,
   message,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
+  DeleteOutlined,
   MedicineBoxOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -36,37 +37,54 @@ const VaccinationTracker = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
+  // Load pets list for the dropdown
+  const fetchPets = useCallback(async () => {
+    try {
+      const res = await api.get('/pets');
+      setPets(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to load pets:', err);
+    }
+  }, []);
+
+  // Load vaccination records
+  const fetchVaccinations = useCallback(async () => {
     setLoading(true);
     try {
-      const [vaccRes, petsRes] = await Promise.all([
-        api.get('/vaccinations'),
-        api.get('/pets').catch(() => ({ data: [] })),
-      ]);
-      setVaccinations(Array.isArray(vaccRes.data) ? vaccRes.data : []);
-      setPets(Array.isArray(petsRes.data) ? petsRes.data : []);
-    } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to fetch vaccinations');
+      const res = await api.get('/vaccinations');
+      setVaccinations(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      message.error(err?.response?.data?.message || 'Failed to fetch vaccinations');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchPets();
+    fetchVaccinations();
+  }, [fetchPets, fetchVaccinations]);
 
-  const handleOpenAddModal = () => {
+  const handleOpenCreateModal = () => {
     setEditingRecord(null);
     form.resetFields();
+    form.setFieldsValue({
+      status: 'PENDING',
+      vaccinationDate: dayjs(),
+      nextDueDate: dayjs().add(1, 'year'),
+      petId: pets.length > 0 ? pets[0].id : undefined,
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
+
+    // Resolve pet identifier (can be nested record.pet.id or flat record.petId)
+    const currentPetId = record.pet?.id || record.petId || (pets.find(p => p.petName === record.petName)?.id);
+
     form.setFieldsValue({
-      petId: record.pet ? record.pet.id : record.petId,
-      petName: record.petName || (record.pet ? record.pet.petName : ''),
+      petId: currentPetId,
       vaccineName: record.vaccineName,
       vaccinationDate: record.vaccinationDate ? dayjs(record.vaccinationDate) : null,
       nextDueDate: record.nextDueDate ? dayjs(record.nextDueDate) : null,
@@ -82,14 +100,26 @@ const VaccinationTracker = () => {
   };
 
   const handleFormSubmit = async (values) => {
+    // Find the selected pet object to guarantee both ID and petName are populated
+    const selectedPet = pets.find((p) => String(p.id) === String(values.petId));
+
+    const vDate = values.vaccinationDate
+      ? dayjs(values.vaccinationDate).format('YYYY-MM-DD')
+      : null;
+    const nDate = values.nextDueDate
+      ? dayjs(values.nextDueDate).format('YYYY-MM-DD')
+      : null;
+
+    // Payload formatted to satisfy both flat and relational Spring Boot models
     const payload = {
-      ...values,
-      vaccinationDate: values.vaccinationDate
-        ? values.vaccinationDate.format('YYYY-MM-DD')
-        : null,
-      nextDueDate: values.nextDueDate
-        ? values.nextDueDate.format('YYYY-MM-DD')
-        : null,
+      ...(editingRecord || {}),
+      petId: selectedPet ? selectedPet.id : values.petId,
+      petName: selectedPet ? selectedPet.petName : editingRecord?.petName,
+      pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: values.petId },
+      vaccineName: values.vaccineName,
+      vaccinationDate: vDate,
+      nextDueDate: nDate,
+      status: values.status || 'PENDING',
     };
 
     try {
@@ -103,68 +133,42 @@ const VaccinationTracker = () => {
       setIsModalOpen(false);
       setEditingRecord(null);
       form.resetFields();
-      fetchData();
+      fetchVaccinations();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Operation failed');
+      console.error('Vaccination save error:', error?.response || error);
+      message.error(error?.response?.data?.message || 'Failed to save vaccination');
     }
   };
 
-  const getStatusTag = (status) => {
-    const s = (status || '').toUpperCase();
-    if (s === 'COMPLETED') {
-      return (
-        <Tag
-          icon={<CheckCircleOutlined />}
-          style={{
-            borderRadius: 16,
-            padding: '2px 12px',
-            fontWeight: 600,
-            color: '#389e0d',
-            backgroundColor: '#f6ffed',
-            border: '1px solid #b7eb8f',
-          }}
-        >
-          COMPLETED
-        </Tag>
-      );
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/vaccinations/${id}`);
+      message.success('Vaccination deleted successfully');
+      fetchVaccinations();
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Failed to delete vaccination');
     }
-    return (
-      <Tag
-        icon={<ClockCircleOutlined />}
-        style={{
-          borderRadius: 16,
-          padding: '2px 12px',
-          fontWeight: 600,
-          color: '#d46b08',
-          backgroundColor: '#fff7e6',
-          border: '1px solid #ffd591',
-        }}
-      >
-        PENDING
-      </Tag>
-    );
   };
 
   const columns = [
     {
       title: 'Pet Name',
-      dataIndex: 'petName',
       key: 'petName',
-      render: (text, record) => (
-        <span style={{ fontWeight: 600, color: '#0f172a' }}>
-          {text || (record.pet && record.pet.petName) || 'Bruno'}
-        </span>
-      ),
+      render: (_, record) => {
+        // Look up by relationship, direct field, or match from pets list
+        const name =
+          record.pet?.petName ||
+          record.petName ||
+          pets.find((p) => String(p.id) === String(record.petId))?.petName ||
+          '—';
+        return <span style={{ fontWeight: 600, color: '#0f172a' }}>{name}</span>;
+      },
     },
     {
       title: 'Vaccine Name',
       dataIndex: 'vaccineName',
       key: 'vaccineName',
-      render: (text) => (
-        <span style={{ color: '#1e293b', fontWeight: 500 }}>
-          {text}
-        </span>
-      ),
+      render: (text) => <span style={{ color: '#334155', fontWeight: 500 }}>{text}</span>,
     },
     {
       title: 'Vaccination Date',
@@ -181,7 +185,7 @@ const VaccinationTracker = () => {
       dataIndex: 'nextDueDate',
       key: 'nextDueDate',
       render: (date) => (
-        <span style={{ color: '#64748b', fontWeight: 500 }}>
+        <span style={{ color: '#64748b' }}>
           {date ? dayjs(date).format('YYYY-MM-DD') : '—'}
         </span>
       ),
@@ -190,134 +194,136 @@ const VaccinationTracker = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => getStatusTag(status),
+      render: (status) => {
+        const s = (status || 'PENDING').toUpperCase();
+        return s === 'COMPLETED' ? (
+          <Tag color="success" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+            COMPLETED
+          </Tag>
+        ) : (
+          <Tag color="warning" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+            PENDING
+          </Tag>
+        );
+      },
     },
     {
-      title: 'Action',
-      key: 'action',
+      title: 'Actions',
+      key: 'actions',
       render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          onClick={() => handleOpenEditModal(record)}
-          style={{
-            fontWeight: 500,
-            padding: '4px 8px',
-            display: 'inline-flex',
-            alignItems: 'center',
-          }}
-        >
-          Edit
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleOpenEditModal(record)}
+            style={{ fontWeight: 500, padding: '4px 8px' }}
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            title="Are you sure you want to delete this vaccination?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              style={{ fontWeight: 500, padding: '4px 8px' }}
+            >
+              Delete
+            </Button>
+          </Popconfirm>
+        </div>
       ),
     },
   ];
 
-  const pendingCount = vaccinations.filter((v) => v.status === 'PENDING').length;
-  const completedCount = vaccinations.filter((v) => v.status === 'COMPLETED').length;
-
-  const upcomingReminder = vaccinations.find(
-    (v) => v.status === 'PENDING' || v.nextDueDate
-  );
-
   const filteredVaccinations = vaccinations.filter((v) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const petName = (v.petName || (v.pet && v.pet.petName) || '').toLowerCase();
-    const vaccine = (v.vaccineName || '').toLowerCase();
-    return petName.includes(q) || vaccine.includes(q);
+    const petName = (
+      v.pet?.petName ||
+      v.petName ||
+      pets.find((p) => String(p.id) === String(v.petId))?.petName ||
+      ''
+    ).toLowerCase();
+    const vaccineName = (v.vaccineName || '').toLowerCase();
+    return petName.includes(q) || vaccineName.includes(q);
+  });
+
+  // Check for upcoming alerts (due in next 14 days)
+  const upcomingReminders = vaccinations.filter((v) => {
+    if (!v.nextDueDate) return false;
+    const due = dayjs(v.nextDueDate);
+    const now = dayjs();
+    const diffDays = due.diff(now, 'day');
+    return diffDays >= 0 && diffDays <= 14;
   });
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Reminders Alert */}
+      {upcomingReminders.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          {upcomingReminders.slice(0, 2).map((item, idx) => (
+            <Alert
+              key={idx}
+              message={`Reminder: ${item.vaccineName} due on ${dayjs(item.nextDueDate).format('YYYY-MM-DD')}`}
+              type="warning"
+              showIcon
+              style={{ marginBottom: 8, borderRadius: 8 }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Metric Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
-          <Card
-            bordered={false}
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-              borderLeft: '4px solid #1890ff',
-            }}
-            bodyStyle={{ padding: '16px 20px' }}
-          >
-            <Statistic
-              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>TOTAL DOSES</span>}
-              value={vaccinations.length}
-              prefix={<MedicineBoxOutlined style={{ color: '#1890ff', marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
-            />
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #1677ff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <MedicineBoxOutlined style={{ fontSize: 24, color: '#1677ff' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>Total Vaccinations</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{vaccinations.length}</div>
+              </div>
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card
-            bordered={false}
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-              borderLeft: '4px solid #fa8c16',
-            }}
-            bodyStyle={{ padding: '16px 20px' }}
-          >
-            <Statistic
-              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>PENDING VACCINATIONS</span>}
-              value={pendingCount}
-              prefix={<ClockCircleOutlined style={{ color: '#fa8c16', marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
-            />
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <ClockCircleOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>Pending / Due</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+                  {vaccinations.filter((v) => (v.status || 'PENDING').toUpperCase() === 'PENDING').length}
+                </div>
+              </div>
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card
-            bordered={false}
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-              borderLeft: '4px solid #52c41a',
-            }}
-            bodyStyle={{ padding: '16px 20px' }}
-          >
-            <Statistic
-              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>COMPLETED DOSES</span>}
-              value={completedCount}
-              prefix={<CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
-            />
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #52c41a' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <CheckCircleOutlined style={{ fontSize: 24, color: '#52c41a' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>Completed</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+                  {vaccinations.filter((v) => (v.status || '').toUpperCase() === 'COMPLETED').length}
+                </div>
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>
 
-      {/* Reminder Section */}
-      <div style={{ marginBottom: 24 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 10 }}>
-          Vaccination Reminders
-        </h3>
-        <Alert
-          message={
-            upcomingReminder
-              ? `Reminder: ${upcomingReminder.vaccineName || 'Rabies'} due on ${
-                  upcomingReminder.nextDueDate || '2026-09-14'
-                } for pet`
-              : 'Reminder: Rabies due on 2026-09-14 for pet'
-          }
-          type="warning"
-          showIcon
-          style={{
-            borderRadius: 10,
-            border: '1px solid #ffe58f',
-            backgroundColor: '#fffbe6',
-          }}
-        />
-      </div>
-
-      {/* Main Table Card */}
+      {/* Main Schedules Table */}
       <Card
         bordered={false}
-        style={{
-          borderRadius: 14,
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-        }}
+        style={{ borderRadius: 14, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)' }}
         bodyStyle={{ padding: '24px 28px' }}
       >
         <div
@@ -338,11 +344,11 @@ const VaccinationTracker = () => {
                 Vaccination Schedules
               </h2>
               <Tag color="blue" style={{ borderRadius: 12, padding: '1px 10px', fontWeight: 600 }}>
-                {vaccinations.length} Records
+                {vaccinations.length} Recorded
               </Tag>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
-              Track immunizations, booster dates, and medical logs
+              Track immunizations, booster dates, and pending medical alerts
             </p>
           </div>
 
@@ -357,13 +363,8 @@ const VaccinationTracker = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleOpenAddModal}
-              style={{
-                borderRadius: 8,
-                fontWeight: 600,
-                height: 38,
-                padding: '0 18px',
-              }}
+              onClick={handleOpenCreateModal}
+              style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
             >
               Add Vaccination
             </Button>
@@ -382,7 +383,7 @@ const VaccinationTracker = () => {
         />
       </Card>
 
-      {/* Modal */}
+      {/* Add / Edit Modal */}
       <Modal
         title={editingRecord ? 'Edit Vaccination' : 'Add Vaccination'}
         open={Boolean(isModalOpen)}
@@ -405,12 +406,11 @@ const VaccinationTracker = () => {
             rules={[{ required: true, message: 'Please select a pet' }]}
           >
             <Select placeholder="Select a pet">
-              {pets.map((p) => (
-                <Option key={p.id} value={p.id}>
-                  {p.petName}
+              {pets.map((pet) => (
+                <Option key={pet.id} value={pet.id}>
+                  {pet.petName}
                 </Option>
               ))}
-              {pets.length === 0 && <Option value={1}>Bruno</Option>}
             </Select>
           </Form.Item>
 
@@ -419,15 +419,15 @@ const VaccinationTracker = () => {
             name="vaccineName"
             rules={[{ required: true, message: 'Please enter vaccine name' }]}
           >
-            <Input placeholder="e.g. Rabies, DHPP" />
+            <Input placeholder="e.g. Rabies, DHPP, Bordetella" />
           </Form.Item>
 
           <Form.Item
             label="Vaccination Date"
             name="vaccinationDate"
-            rules={[{ required: true, message: 'Please select vaccination date' }]}
+            rules={[{ required: true, message: 'Please select date' }]}
           >
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
           </Form.Item>
 
           <Form.Item
@@ -435,14 +435,13 @@ const VaccinationTracker = () => {
             name="nextDueDate"
             rules={[{ required: true, message: 'Please select next due date' }]}
           >
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
           </Form.Item>
 
           <Form.Item
             label="Status"
             name="status"
             rules={[{ required: true, message: 'Please select status' }]}
-            initialValue="PENDING"
           >
             <Select placeholder="Select status">
               <Option value="PENDING">PENDING</Option>
