@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Statistic, Progress, Spin, message } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Spin, Button, Tag, message } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import api from '../services/api';
 
@@ -16,15 +17,31 @@ const Dashboard = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [petsRes, vaccRes, adoptRes] = await Promise.all([
+      const results = await Promise.allSettled([
         api.get('/pets'),
         api.get('/vaccinations'),
-        api.get('/adoptions'),
+        api.get('/adoptions').catch(() => api.get('/adoption-requests')),
       ]);
 
-      setPets(petsRes.data || []);
-      setVaccinations(vaccRes.data || []);
-      setAdoptions(adoptRes.data || []);
+      const [petsRes, vaccRes, adoptRes] = results;
+
+      if (petsRes.status === 'fulfilled') {
+        setPets(Array.isArray(petsRes.value.data) ? petsRes.value.data : []);
+      }
+      if (vaccRes.status === 'fulfilled') {
+        setVaccinations(Array.isArray(vaccRes.value.data) ? vaccRes.value.data : []);
+      }
+      if (adoptRes.status === 'fulfilled') {
+        setAdoptions(Array.isArray(adoptRes.value.data) ? adoptRes.value.data : []);
+      }
+
+      if (
+        petsRes.status === 'rejected' &&
+        vaccRes.status === 'rejected' &&
+        adoptRes.status === 'rejected'
+      ) {
+        message.error('Failed to fetch dashboard data');
+      }
     } catch (error) {
       message.error(error?.response?.data?.message || 'Failed to fetch dashboard data');
     } finally {
@@ -43,6 +60,7 @@ const Dashboard = () => {
   const maxCapacity = 50;
   const capacityPercentage = Math.min(Math.round((shelterPetsCount / maxCapacity) * 100), 100);
 
+  // Dynamic 6-month window ending on current month
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonthIdx = new Date().getMonth();
   const past6Months = Array.from({ length: 6 }, (_, i) => {
@@ -76,7 +94,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Spin size="large" tip="Loading dashboard metrics..." />
+        <Spin size="large" />
       </div>
     );
   }
@@ -114,6 +132,44 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Top Page Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16,
+          marginBottom: 24,
+          paddingBottom: 16,
+          borderBottom: '1px solid #e2e8f0',
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a' }}>
+              Dashboard Overview
+            </h1>
+            <Tag color="cyan" style={{ borderRadius: 12, padding: '2px 10px', fontWeight: 600 }}>
+              Live Metrics
+            </Tag>
+          </div>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#64748b' }}>
+            Real-time statistics on pet population, medical schedules, and shelter status
+          </p>
+        </div>
+
+        <div>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchData}
+            style={{ borderRadius: 8, fontWeight: 500 }}
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
+
       {/* KPI Statistic Cards */}
       <Row gutter={[20, 20]}>
         {statCards.map((card, idx) => (
@@ -126,7 +182,6 @@ const Dashboard = () => {
                 position: 'relative',
                 overflow: 'hidden',
                 border: `1px solid ${card.border}`,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               }}
               bodyStyle={{ padding: '20px 24px' }}
             >
@@ -141,11 +196,7 @@ const Dashboard = () => {
                 }}
               />
               <Statistic
-                title={
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {card.title}
-                  </span>
-                }
+                title={card.title}
                 value={card.value}
                 valueStyle={{
                   color: card.textColor,
@@ -162,11 +213,7 @@ const Dashboard = () => {
       {/* Shelter Capacity Progress Card */}
       {isShelterOrAdmin && (
         <Card
-          title={
-            <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 16 }}>
-              Shelter Capacity Status
-            </span>
-          }
+          title="Shelter Capacity Status"
           bordered={false}
           style={{
             marginTop: 24,
@@ -196,11 +243,7 @@ const Dashboard = () => {
 
       {/* Overview Analytics Bar Chart */}
       <Card
-        title={
-          <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 16 }}>
-            Vaccinations and Adoptions Overview
-          </span>
-        }
+        title="Vaccinations and Adoptions Overview"
         bordered={false}
         style={{
           marginTop: 24,
@@ -209,14 +252,14 @@ const Dashboard = () => {
         }}
         bodyStyle={{ padding: '24px 28px' }}
       >
-        {/* Custom Legend */}
+        {/* Legend */}
         <div style={{ display: 'flex', gap: 28, marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
                 width: 14,
                 height: 14,
-                background: 'linear-gradient(180deg, #36cfc9 0%, #1890ff 100%)',
+                backgroundColor: '#1890ff',
                 display: 'inline-block',
                 borderRadius: 4,
               }}
@@ -228,7 +271,7 @@ const Dashboard = () => {
               style={{
                 width: 14,
                 height: 14,
-                background: 'linear-gradient(180deg, #95de64 0%, #52c41a 100%)',
+                backgroundColor: '#52c41a',
                 display: 'inline-block',
                 borderRadius: 4,
               }}
@@ -237,7 +280,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Visual Responsive Bar Layout */}
+        {/* Responsive Bar Container */}
         <div
           style={{
             display: 'flex',
@@ -251,8 +294,8 @@ const Dashboard = () => {
           {past6Months.map((mObj, idx) => {
             const vaccCount = vaccCounts[idx];
             const adoptCount = adoptCounts[idx];
-            const vaccHeight = vaccCount > 0 ? (vaccCount / maxValue) * 175 : 6;
-            const adoptHeight = adoptCount > 0 ? (adoptCount / maxValue) * 175 : 6;
+            const vaccHeight = vaccCount > 0 ? (vaccCount / maxValue) * 175 : 8;
+            const adoptHeight = adoptCount > 0 ? (adoptCount / maxValue) * 175 : 8;
 
             return (
               <div
@@ -284,7 +327,7 @@ const Dashboard = () => {
                             ? 'linear-gradient(180deg, #40a9ff 0%, #1890ff 100%)'
                             : '#f0f5ff',
                         borderRadius: '6px 6px 0 0',
-                        transition: 'height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transition: 'height 0.35s ease',
                       }}
                     />
                   </div>
@@ -306,7 +349,7 @@ const Dashboard = () => {
                             ? 'linear-gradient(180deg, #73d13d 0%, #52c41a 100%)'
                             : '#f6ffed',
                         borderRadius: '6px 6px 0 0',
-                        transition: 'height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transition: 'height 0.35s ease',
                       }}
                     />
                   </div>
