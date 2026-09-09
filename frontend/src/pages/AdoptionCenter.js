@@ -19,6 +19,26 @@ import api from '../services/api';
 const { Meta } = Card;
 const { TextArea } = Input;
 
+// Helper to provide species-appropriate fallbacks with Paw graphic for "other"
+const getDefaultImage = (species) => {
+  const s = (species || '').toLowerCase();
+
+  if (s.includes('cat')) {
+    return 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80';
+  }
+
+  if (s.includes('dog')) {
+    return 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80';
+  }
+
+  if (s.includes('bird')) {
+    return 'https://images.unsplash.com/photo-1522926197415-e55c22c88c71?auto=format&fit=crop&w=600&q=80';
+  }
+
+  // "Other" / unknown: SVG Paw print graphic on clean soft-blue background
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="%23e6f4ff"/><g fill="%231677ff" transform="translate(160, 85) scale(3.5)"><ellipse cx="8.5" cy="4.5" rx="1.8" ry="2.5"/><ellipse cx="15.5" cy="4.5" rx="1.8" ry="2.5"/><ellipse cx="4.5" cy="9.5" rx="1.8" ry="2.5"/><ellipse cx="19.5" cy="9.5" rx="1.8" ry="2.5"/><path d="M12 9.5c-3.2 0-5.5 2.5-5.5 5.5 0 2.2 1.8 4 4 4 .5 0 1-.1 1.5-.4.5.3 1 .4 1.5.4 2.2 0 4-1.8 4-4 0-3-2.3-5.5-5.5-5.5z"/></g></svg>`;
+};
+
 const AdoptionCenter = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +48,6 @@ const AdoptionCenter = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // Get current logged-in user from Redux or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
   const storedUser = localStorage.getItem('user')
     ? JSON.parse(localStorage.getItem('user'))
@@ -40,7 +59,6 @@ const AdoptionCenter = () => {
     try {
       const response = await api.get('/pets');
       const petList = Array.isArray(response.data) ? response.data : [];
-      // Include all pets that are available for adoption
       const available = petList.filter((p) => p.availableForAdoption !== false);
       setPets(available);
     } catch (error) {
@@ -72,28 +90,19 @@ const AdoptionCenter = () => {
 
     const nowIso = new Date().toISOString().split('T')[0];
 
-    // Payload compatible with both flat fields and entity relations in Spring Boot
     const payload = {
-      // Direct IDs
       petId: selectedPet.id,
       userId: currentUser?.id,
-
-      // Nested Entity mappings (common in JPA/Hibernate @ManyToOne)
       pet: { id: selectedPet.id },
       user: currentUser?.id ? { id: currentUser.id } : undefined,
-
-      // Text descriptions
       reason: values.reason || values.notes,
       notes: values.reason || values.notes,
-
-      // Status and dates
       status: 'PENDING',
       requestDate: nowIso,
       applicationDate: nowIso,
     };
 
     try {
-      // Try primary route `/adoption-requests`, fallback to `/adoptions`
       try {
         await api.post('/adoption-requests', payload);
       } catch (err) {
@@ -203,14 +212,10 @@ const AdoptionCenter = () => {
                   <div style={{ position: 'relative', height: 180, overflow: 'hidden', backgroundColor: '#e2e8f0' }}>
                     <img
                       alt={pet.petName}
-                      src={
-                        pet.imageUrl ||
-                        'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=500&q=80'
-                      }
+                      src={pet.imageUrl || getDefaultImage(pet.species)}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src =
-                          'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=500&q=80';
+                        e.target.src = getDefaultImage(pet.species);
                       }}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
