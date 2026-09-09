@@ -16,7 +16,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  HeartOutlined,
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import api from '../services/api';
@@ -68,15 +67,18 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
 
   const handleOpenEditModal = (record) => {
     setEditingPet(record);
-    setPetNameValue(record.petName || '');
-    setSpeciesValue(record.species || 'Dog');
+    const pName = record.petName || '';
+    const pSpecies = record.species || 'Dog';
+    setPetNameValue(pName);
+    setSpeciesValue(pSpecies);
+
     form.setFieldsValue({
-      petName: record.petName,
-      species: record.species,
-      breed: record.breed,
-      age: record.age,
-      gender: record.gender,
-      imageUrl: record.imageUrl,
+      petName: pName,
+      species: pSpecies,
+      breed: record.breed || '',
+      age: record.age !== undefined && record.age !== null ? record.age : '',
+      gender: record.gender || '',
+      imageUrl: record.imageUrl || '',
     });
     setIsModalOpen(true);
   };
@@ -88,33 +90,62 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   };
 
   const handleFormSubmit = async (values) => {
+    // Ensure age is parsed to an integer or null (fixes Spring Boot 400 Bad Request)
+    const rawAge = values.age;
+    const parsedAge =
+      rawAge !== undefined && rawAge !== '' && rawAge !== null
+        ? parseInt(rawAge, 10)
+        : null;
+
+    // Clean image url (avoid passing empty strings to backend URL validators)
+    const cleanedImageUrl =
+      values.imageUrl && values.imageUrl.trim() !== ''
+        ? values.imageUrl.trim()
+        : null;
+
+    // Preserve existing relationships (like owner / shelter references) on edit
     const payload = {
-      ...values,
+      ...(editingPet || {}),
       petName: petNameValue || values.petName,
       species: speciesValue || values.species,
+      breed: values.breed || '',
+      age: parsedAge,
+      gender: values.gender || editingPet?.gender || '',
+      imageUrl: cleanedImageUrl,
     };
 
     try {
       if (editingPet) {
         const res = await api.put(`/pets/${editingPet.id}`, payload);
-        message.success(res?.data || 'Pet updated successfully.');
+        message.success(
+          typeof res?.data === 'string' ? res.data : 'Pet updated successfully.'
+        );
       } else {
         const res = await api.post('/pets', payload);
-        message.success(res?.data || 'Pet created successfully.');
+        message.success(
+          typeof res?.data === 'string' ? res.data : 'Pet created successfully.'
+        );
       }
       setIsModalOpen(false);
       setEditingPet(null);
       form.resetFields();
       fetchPets();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Operation failed');
+      console.error('Pet Save Error:', error?.response || error);
+      const serverMsg =
+        error?.response?.data?.message ||
+        (typeof error?.response?.data === 'string' ? error.response.data : null) ||
+        'Operation failed';
+      message.error(serverMsg);
     }
   };
 
   const handleDelete = async (id) => {
     try {
       const res = await api.delete(`/pets/${id}`);
-      message.success(res?.data || 'Pet deleted successfully.');
+      message.success(
+        typeof res?.data === 'string' ? res.data : 'Pet deleted successfully.'
+      );
       fetchPets();
     } catch (error) {
       message.error(error?.response?.data?.message || 'Failed to delete pet');
@@ -147,7 +178,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
       title: 'Pet Name',
       dataIndex: 'petName',
       key: 'petName',
-      render: (text, record) => (
+      render: (text) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar
             style={{
@@ -179,7 +210,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
       key: 'age',
       render: (age) => (
         <span style={{ color: '#475569', fontWeight: 500 }}>
-          {age ? `${age} yrs` : '—'}
+          {age !== undefined && age !== null ? `${age} yrs` : '—'}
         </span>
       ),
     },
@@ -366,8 +397,12 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             <Input placeholder="Enter breed" />
           </Form.Item>
 
-          <Form.Item label="Age" name="age">
-            <Input type="number" placeholder="Enter age" />
+          <Form.Item
+            label="Age"
+            name="age"
+            getValueFromEvent={(e) => (e.target.value === '' ? '' : Number(e.target.value))}
+          >
+            <Input type="number" min={0} placeholder="Enter age" />
           </Form.Item>
 
           <Form.Item label="Image URL" name="imageUrl">
