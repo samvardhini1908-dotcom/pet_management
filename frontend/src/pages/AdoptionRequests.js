@@ -28,11 +28,15 @@ const AdoptionRequests = () => {
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api
-        .get('/adoptions')
-        .catch(() => api.get('/adoption-requests'));
-      setRequests(Array.isArray(response.data) ? response.data : []);
+      let res;
+      try {
+        res = await api.get('/adoptions');
+      } catch {
+        res = await api.get('/adoption-requests');
+      }
+      setRequests(Array.isArray(res?.data) ? res.data : []);
     } catch (error) {
+      console.error('Fetch requests error:', error);
       message.error(error?.response?.data?.message || 'Failed to fetch adoption requests');
     } finally {
       setLoading(false);
@@ -43,28 +47,107 @@ const AdoptionRequests = () => {
     fetchRequests();
   }, [fetchRequests]);
 
-  const handleUpdateStatus = async (id, status) => {
-    try {
-      await api
-        .put(`/adoptions/${id}/status`, { status })
-        .catch(() => api.put(`/adoptions/${id}`, { status }));
+  const handleUpdateStatus = async (record, status) => {
+    const id = record.id;
+    let success = false;
+    let lastError = null;
 
+    // Pattern 1: PUT /adoptions/{id}?status=APPROVED (Most common Spring Boot @RequestParam)
+    if (!success) {
+      try {
+        await api.put(`/adoptions/${id}?status=${status}`);
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    // Pattern 2: PUT /adoptions/{id}/status with query param or JSON
+    if (!success) {
+      try {
+        await api.put(`/adoptions/${id}/status?status=${status}`);
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    // Pattern 3: PUT /adoptions/{id}/status with JSON body { status }
+    if (!success) {
+      try {
+        await api.put(`/adoptions/${id}/status`, { status });
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    // Pattern 4: PUT /adoptions/{id} with full updated record entity
+    if (!success) {
+      try {
+        await api.put(`/adoptions/${id}`, {
+          ...record,
+          status: status,
+        });
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    // Pattern 5: Alternate route /adoption-requests/...
+    if (!success) {
+      try {
+        await api.put(`/adoption-requests/${id}?status=${status}`);
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (!success) {
+      try {
+        await api.put(`/adoption-requests/${id}/status`, { status });
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (success) {
       message.success(`Request ${status.toLowerCase()} successfully`);
       fetchRequests();
-    } catch (error) {
-      message.error(error?.response?.data?.message || 'Status update failed');
+    } else {
+      console.error('Status Update Failure details:', lastError?.response || lastError);
+      const errorMsg =
+        lastError?.response?.data?.message ||
+        (typeof lastError?.response?.data === 'string' ? lastError.response.data : null) ||
+        'Status update failed';
+      message.error(errorMsg);
     }
   };
 
   const getStatusTag = (status) => {
     const s = (status || '').toUpperCase();
     if (s === 'APPROVED') {
-      return <Tag color="success" style={{ borderRadius: 12 }}>APPROVED</Tag>;
+      return (
+        <Tag color="success" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+          APPROVED
+        </Tag>
+      );
     }
     if (s === 'REJECTED') {
-      return <Tag color="error" style={{ borderRadius: 12 }}>REJECTED</Tag>;
+      return (
+        <Tag color="error" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+          REJECTED
+        </Tag>
+      );
     }
-    return <Tag color="warning" style={{ borderRadius: 12 }}>PENDING</Tag>;
+    return (
+      <Tag color="warning" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+        PENDING
+      </Tag>
+    );
   };
 
   const columns = [
@@ -74,7 +157,7 @@ const AdoptionRequests = () => {
       key: 'applicantName',
       render: (text, record) => (
         <span style={{ fontWeight: 600, color: '#0f172a' }}>
-          {text || record.user?.fullName || record.user?.username || 'Pet Lover'}
+          {text || record.user?.fullName || record.user?.username || record.userName || 'Pet Lover'}
         </span>
       ),
     },
@@ -83,7 +166,7 @@ const AdoptionRequests = () => {
       dataIndex: 'petName',
       key: 'petName',
       render: (text, record) => (
-        <span style={{ color: '#334155', fontWeight: 500 }}>
+        <span style={{ color: '#334155', fontWeight: 600 }}>
           {text || record.pet?.petName || 'Bruno'}
         </span>
       ),
@@ -92,11 +175,14 @@ const AdoptionRequests = () => {
       title: 'Request Date',
       dataIndex: 'requestDate',
       key: 'requestDate',
-      render: (date) => (
-        <span style={{ color: '#64748b' }}>
-          {date ? dayjs(date).format('YYYY-MM-DD') : '—'}
-        </span>
-      ),
+      render: (date, record) => {
+        const d = date || record.applicationDate;
+        return (
+          <span style={{ color: '#64748b' }}>
+            {d ? dayjs(d).format('YYYY-MM-DD') : '—'}
+          </span>
+        );
+      },
     },
     {
       title: 'Notes / Reason',
@@ -104,7 +190,7 @@ const AdoptionRequests = () => {
       key: 'notes',
       render: (text, record) => (
         <span style={{ color: '#475569' }}>
-          {text || record.reason || 'Looking forward to adopting!'}
+          {text || record.reason || '—'}
         </span>
       ),
     },
@@ -118,14 +204,16 @@ const AdoptionRequests = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => {
-        const isPending = (record.status || 'PENDING') === 'PENDING';
-        if (!isPending) return <span style={{ color: '#94a3b8' }}>Processed</span>;
+        const isPending = (record.status || 'PENDING').toUpperCase() === 'PENDING';
+        if (!isPending) {
+          return <span style={{ color: '#94a3b8', fontWeight: 500 }}>Processed</span>;
+        }
 
         return (
           <div style={{ display: 'flex', gap: 8 }}>
             <Popconfirm
               title="Approve this adoption request?"
-              onConfirm={() => handleUpdateStatus(record.id, 'APPROVED')}
+              onConfirm={() => handleUpdateStatus(record, 'APPROVED')}
               okText="Yes"
               cancelText="No"
             >
@@ -133,14 +221,19 @@ const AdoptionRequests = () => {
                 type="primary"
                 size="small"
                 icon={<CheckOutlined />}
-                style={{ borderRadius: 6, backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                style={{
+                  borderRadius: 6,
+                  backgroundColor: '#52c41a',
+                  borderColor: '#52c41a',
+                  fontWeight: 600,
+                }}
               >
                 Approve
               </Button>
             </Popconfirm>
             <Popconfirm
               title="Reject this adoption request?"
-              onConfirm={() => handleUpdateStatus(record.id, 'REJECTED')}
+              onConfirm={() => handleUpdateStatus(record, 'REJECTED')}
               okText="Yes"
               cancelText="No"
             >
@@ -148,7 +241,7 @@ const AdoptionRequests = () => {
                 danger
                 size="small"
                 icon={<CloseOutlined />}
-                style={{ borderRadius: 6 }}
+                style={{ borderRadius: 6, fontWeight: 600 }}
               >
                 Reject
               </Button>
@@ -159,13 +252,17 @@ const AdoptionRequests = () => {
     },
   ];
 
-  const pendingCount = requests.filter((r) => (r.status || 'PENDING') === 'PENDING').length;
-  const approvedCount = requests.filter((r) => r.status === 'APPROVED').length;
+  const pendingCount = requests.filter(
+    (r) => (r.status || 'PENDING').toUpperCase() === 'PENDING'
+  ).length;
+  const approvedCount = requests.filter(
+    (r) => (r.status || '').toUpperCase() === 'APPROVED'
+  ).length;
 
   const filteredRequests = requests.filter((r) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const applicant = (r.applicantName || r.user?.fullName || '').toLowerCase();
+    const applicant = (r.applicantName || r.user?.fullName || r.user?.username || '').toLowerCase();
     const pet = (r.petName || r.pet?.petName || '').toLowerCase();
     return applicant.includes(q) || pet.includes(q);
   });
