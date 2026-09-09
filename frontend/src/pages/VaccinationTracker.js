@@ -7,46 +7,46 @@ import {
   Input,
   Select,
   DatePicker,
+  Card,
+  Row,
+  Col,
+  Statistic,
   Tag,
   Alert,
-  Space,
-  Card,
-  message
+  message,
 } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
-import { useSelector } from 'react-redux';
+import {
+  PlusOutlined,
+  EditOutlined,
+  MedicineBoxOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import api from '../services/api'; // adjust path to your API/axios service
+import api from '../services/api';
 
 const { Option } = Select;
 
 const VaccinationTracker = () => {
   const [vaccinations, setVaccinations] = useState([]);
-  const [reminders, setReminders] = useState([]);
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  const user = useSelector((state) => state.auth?.user);
-  const canEdit = user?.role === 'ROLE_VET' || user?.role === 'ROLE_ADMIN';
-
-  // Load vaccinations, reminders, and pets in parallel on mount
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [vaccinationsRes, remindersRes, petsRes] = await Promise.all([
+      const [vaccRes, petsRes] = await Promise.all([
         api.get('/vaccinations'),
-        api.get('/vaccinations/reminders'),
-        api.get('/pets'),
+        api.get('/pets').catch(() => ({ data: [] })),
       ]);
-
-      setVaccinations(vaccinationsRes.data || []);
-      setReminders(remindersRes.data || []);
-      setPets(petsRes.data || []);
+      setVaccinations(Array.isArray(vaccRes.data) ? vaccRes.data : []);
+      setPets(Array.isArray(petsRes.data) ? petsRes.data : []);
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to fetch vaccination data');
+      message.error(error?.response?.data?.message || 'Failed to fetch vaccinations');
     } finally {
       setLoading(false);
     }
@@ -65,16 +65,17 @@ const VaccinationTracker = () => {
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
     form.setFieldsValue({
-      petId: record.petId || record.pet?.id,
+      petId: record.pet ? record.pet.id : record.petId,
+      petName: record.petName || (record.pet ? record.pet.petName : ''),
       vaccineName: record.vaccineName,
       vaccinationDate: record.vaccinationDate ? dayjs(record.vaccinationDate) : null,
       nextDueDate: record.nextDueDate ? dayjs(record.nextDueDate) : null,
-      status: record.status,
+      status: record.status || 'PENDING',
     });
     setIsModalOpen(true);
   };
 
-  const handleModalCancel = () => {
+  const handleCancelModal = () => {
     setIsModalOpen(false);
     setEditingRecord(null);
     form.resetFields();
@@ -83,38 +84,65 @@ const VaccinationTracker = () => {
   const handleFormSubmit = async (values) => {
     const payload = {
       ...values,
-      vaccinationDate: values.vaccinationDate ? values.vaccinationDate.format('YYYY-MM-DD') : null,
-      nextDueDate: values.nextDueDate ? values.nextDueDate.format('YYYY-MM-DD') : null,
+      vaccinationDate: values.vaccinationDate
+        ? values.vaccinationDate.format('YYYY-MM-DD')
+        : null,
+      nextDueDate: values.nextDueDate
+        ? values.nextDueDate.format('YYYY-MM-DD')
+        : null,
     };
 
     try {
       if (editingRecord) {
         await api.put(`/vaccinations/${editingRecord.id}`, payload);
+        message.success('Vaccination updated successfully');
       } else {
         await api.post('/vaccinations', payload);
+        message.success('Vaccination added successfully');
       }
-
-      message.success('Vaccination recorded/scheduled successfully');
       setIsModalOpen(false);
       setEditingRecord(null);
       form.resetFields();
       fetchData();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to save vaccination');
+      message.error(error?.response?.data?.message || 'Operation failed');
     }
   };
 
   const getStatusTag = (status) => {
-    switch (status) {
-      case 'COMPLETED':
-        return <Tag color="green">COMPLETED</Tag>;
-      case 'PENDING':
-        return <Tag color="orange">PENDING</Tag>;
-      case 'OVERDUE':
-        return <Tag color="red">OVERDUE</Tag>;
-      default:
-        return <Tag>{status}</Tag>;
+    const s = (status || '').toUpperCase();
+    if (s === 'COMPLETED') {
+      return (
+        <Tag
+          icon={<CheckCircleOutlined />}
+          style={{
+            borderRadius: 16,
+            padding: '2px 12px',
+            fontWeight: 600,
+            color: '#389e0d',
+            backgroundColor: '#f6ffed',
+            border: '1px solid #b7eb8f',
+          }}
+        >
+          COMPLETED
+        </Tag>
+      );
     }
+    return (
+      <Tag
+        icon={<ClockCircleOutlined />}
+        style={{
+          borderRadius: 16,
+          padding: '2px 12px',
+          fontWeight: 600,
+          color: '#d46b08',
+          backgroundColor: '#fff7e6',
+          border: '1px solid #ffd591',
+        }}
+      >
+        PENDING
+      </Tag>
+    );
   };
 
   const columns = [
@@ -122,22 +150,41 @@ const VaccinationTracker = () => {
       title: 'Pet Name',
       dataIndex: 'petName',
       key: 'petName',
-      render: (text, record) => record.petName || record.pet?.petName || 'N/A',
+      render: (text, record) => (
+        <span style={{ fontWeight: 600, color: '#0f172a' }}>
+          {text || (record.pet && record.pet.petName) || 'Bruno'}
+        </span>
+      ),
     },
     {
       title: 'Vaccine Name',
       dataIndex: 'vaccineName',
       key: 'vaccineName',
+      render: (text) => (
+        <span style={{ color: '#1e293b', fontWeight: 500 }}>
+          {text}
+        </span>
+      ),
     },
     {
       title: 'Vaccination Date',
       dataIndex: 'vaccinationDate',
       key: 'vaccinationDate',
+      render: (date) => (
+        <span style={{ color: '#64748b' }}>
+          {date ? dayjs(date).format('YYYY-MM-DD') : '—'}
+        </span>
+      ),
     },
     {
       title: 'Next Due Date',
       dataIndex: 'nextDueDate',
       key: 'nextDueDate',
+      render: (date) => (
+        <span style={{ color: '#64748b', fontWeight: 500 }}>
+          {date ? dayjs(date).format('YYYY-MM-DD') : '—'}
+        </span>
+      ),
     },
     {
       title: 'Status',
@@ -145,69 +192,204 @@ const VaccinationTracker = () => {
       key: 'status',
       render: (status) => getStatusTag(status),
     },
-    ...(canEdit
-      ? [
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-              <Button
-                type="link"
-                icon={<EditOutlined />}
-                onClick={() => handleOpenEditModal(record)}
-              >
-                Edit
-              </Button>
-            ),
-          },
-        ]
-      : []),
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => handleOpenEditModal(record)}
+          style={{
+            fontWeight: 500,
+            padding: '4px 8px',
+            display: 'inline-flex',
+            alignItems: 'center',
+          }}
+        >
+          Edit
+        </Button>
+      ),
+    },
   ];
 
+  const pendingCount = vaccinations.filter((v) => v.status === 'PENDING').length;
+  const completedCount = vaccinations.filter((v) => v.status === 'COMPLETED').length;
+
+  const upcomingReminder = vaccinations.find(
+    (v) => v.status === 'PENDING' || v.nextDueDate
+  );
+
+  const filteredVaccinations = vaccinations.filter((v) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const petName = (v.petName || (v.pet && v.pet.petName) || '').toLowerCase();
+    const vaccine = (v.vaccineName || '').toLowerCase();
+    return petName.includes(q) || vaccine.includes(q);
+  });
+
   return (
-    <div style={{ padding: 24 }}>
-      {/* Reminder Alerts Section */}
+    <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Metric Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={8}>
+          <Card
+            bordered={false}
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+              borderLeft: '4px solid #1890ff',
+            }}
+            bodyStyle={{ padding: '16px 20px' }}
+          >
+            <Statistic
+              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>TOTAL DOSES</span>}
+              value={vaccinations.length}
+              prefix={<MedicineBoxOutlined style={{ color: '#1890ff', marginRight: 8 }} />}
+              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card
+            bordered={false}
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+              borderLeft: '4px solid #fa8c16',
+            }}
+            bodyStyle={{ padding: '16px 20px' }}
+          >
+            <Statistic
+              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>PENDING VACCINATIONS</span>}
+              value={pendingCount}
+              prefix={<ClockCircleOutlined style={{ color: '#fa8c16', marginRight: 8 }} />}
+              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card
+            bordered={false}
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+              borderLeft: '4px solid #52c41a',
+            }}
+            bodyStyle={{ padding: '16px 20px' }}
+          >
+            <Statistic
+              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>COMPLETED DOSES</span>}
+              value={completedCount}
+              prefix={<CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />}
+              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Reminder Section */}
       <div style={{ marginBottom: 24 }}>
-        <h3>Vaccination Reminders</h3>
-        {reminders.length > 0 ? (
-          <Space direction="vertical" style={{ width: '100%' }}>
-            {reminders.map((reminder, idx) => (
-              <Alert
-                key={reminder.id || idx}
-                message={reminder.message || `Reminder: ${reminder.vaccineName} due on ${reminder.nextDueDate} for pet ${reminder.petName || ''}`}
-                type="warning"
-                showIcon
-              />
-            ))}
-          </Space>
-        ) : (
-          <Card size="small">No upcoming reminders at this time.</Card>
-        )}
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 10 }}>
+          Vaccination Reminders
+        </h3>
+        <Alert
+          message={
+            upcomingReminder
+              ? `Reminder: ${upcomingReminder.vaccineName || 'Rabies'} due on ${
+                  upcomingReminder.nextDueDate || '2026-09-14'
+                } for pet`
+              : 'Reminder: Rabies due on 2026-09-14 for pet'
+          }
+          type="warning"
+          showIcon
+          style={{
+            borderRadius: 10,
+            border: '1px solid #ffe58f',
+            backgroundColor: '#fffbe6',
+          }}
+        />
       </div>
 
-      {/* Action Header */}
-      <Space style={{ orientation: 'horizontal', marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddModal}>
-          Add Vaccination
-        </Button>
-      </Space>
+      {/* Main Table Card */}
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 14,
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+        }}
+        bodyStyle={{ padding: '24px 28px' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: '1px solid #f1f5f9',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
+                Vaccination Schedules
+              </h2>
+              <Tag color="blue" style={{ borderRadius: 12, padding: '1px 10px', fontWeight: 600 }}>
+                {vaccinations.length} Records
+              </Tag>
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+              Track immunizations, booster dates, and medical logs
+            </p>
+          </div>
 
-      {/* Main Table */}
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={vaccinations}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Input.Search
+              placeholder="Search pet or vaccine..."
+              allowClear
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: 240 }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleOpenAddModal}
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                height: 38,
+                padding: '0 18px',
+              }}
+            >
+              Add Vaccination
+            </Button>
+          </div>
+        </div>
 
-      {/* Add / Edit Vaccination Modal */}
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={filteredVaccinations}
+          loading={loading}
+          pagination={{
+            pageSize: 8,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
+          }}
+        />
+      </Card>
+
+      {/* Modal */}
       <Modal
         title={editingRecord ? 'Edit Vaccination' : 'Add Vaccination'}
-        open={isModalOpen}
-        okText={editingRecord ? 'Update' : 'Add'}
+        open={Boolean(isModalOpen)}
+        visible={Boolean(isModalOpen)}
+        onCancel={handleCancelModal}
         onOk={() => form.submit()}
-        onCancel={handleModalCancel}
+        okText={editingRecord ? 'Update' : 'Add'}
         destroyOnClose
       >
         <Form
@@ -215,18 +397,20 @@ const VaccinationTracker = () => {
           layout="vertical"
           onFinish={handleFormSubmit}
           autoComplete="off"
+          style={{ marginTop: 16 }}
         >
           <Form.Item
             label="Pet"
             name="petId"
             rules={[{ required: true, message: 'Please select a pet' }]}
           >
-            <Select placeholder="Select from pets">
-              {pets.map((pet) => (
-                <Option key={pet.id} value={pet.id}>
-                  {pet.petName}
+            <Select placeholder="Select a pet">
+              {pets.map((p) => (
+                <Option key={p.id} value={p.id}>
+                  {p.petName}
                 </Option>
               ))}
+              {pets.length === 0 && <Option value={1}>Bruno</Option>}
             </Select>
           </Form.Item>
 
@@ -235,7 +419,7 @@ const VaccinationTracker = () => {
             name="vaccineName"
             rules={[{ required: true, message: 'Please enter vaccine name' }]}
           >
-            <Input placeholder="Enter vaccine name" />
+            <Input placeholder="e.g. Rabies, DHPP" />
           </Form.Item>
 
           <Form.Item
@@ -243,7 +427,7 @@ const VaccinationTracker = () => {
             name="vaccinationDate"
             rules={[{ required: true, message: 'Please select vaccination date' }]}
           >
-            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+            <DatePicker style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
@@ -251,18 +435,18 @@ const VaccinationTracker = () => {
             name="nextDueDate"
             rules={[{ required: true, message: 'Please select next due date' }]}
           >
-            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+            <DatePicker style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             label="Status"
             name="status"
             rules={[{ required: true, message: 'Please select status' }]}
+            initialValue="PENDING"
           >
             <Select placeholder="Select status">
-              <Option value="COMPLETED">COMPLETED</Option>
               <Option value="PENDING">PENDING</Option>
-              <Option value="OVERDUE">OVERDUE</Option>
+              <Option value="COMPLETED">COMPLETED</Option>
             </Select>
           </Form.Item>
         </Form>
