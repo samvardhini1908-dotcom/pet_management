@@ -52,11 +52,31 @@ public class VaccinationController {
             .body("Vaccination created successfully.");
     }
 
+    // @PutMapping("/{id}")
+    // @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
+    // public ResponseEntity<Vaccination> updateVaccination(@PathVariable Long id,@RequestBody Vaccination vaccinationDetails) 
+    // {
+
+    //     return vaccinationService.getVaccinationById(id)
+    //         .map(existingVaccination -> {
+
+    //             existingVaccination.setVaccineName(vaccinationDetails.getVaccineName());
+    //             existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
+    //             existingVaccination.setNextDueDate(vaccinationDetails.getNextDueDate());
+    //             existingVaccination.setStatus(vaccinationDetails.getStatus());
+
+    //             Vaccination savedVaccination =
+    //                     vaccinationService.saveVaccination(existingVaccination);
+
+    //             return ResponseEntity.ok(savedVaccination);
+    //         })
+    //         .orElse(ResponseEntity.notFound().build());
+    // }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
-    public ResponseEntity<Vaccination> updateVaccination(@PathVariable Long id,@RequestBody Vaccination vaccinationDetails) 
+    public ResponseEntity<Vaccination> updateVaccination(@PathVariable Long id, @RequestBody Vaccination vaccinationDetails) 
     {
-
         return vaccinationService.getVaccinationById(id)
             .map(existingVaccination -> {
 
@@ -64,6 +84,11 @@ public class VaccinationController {
                 existingVaccination.setVaccinationDate(vaccinationDetails.getVaccinationDate());
                 existingVaccination.setNextDueDate(vaccinationDetails.getNextDueDate());
                 existingVaccination.setStatus(vaccinationDetails.getStatus());
+                
+                // ADD THIS LINE:
+                if (vaccinationDetails.getPet() != null) {
+                    existingVaccination.setPet(vaccinationDetails.getPet());
+                }
 
                 Vaccination savedVaccination =
                         vaccinationService.saveVaccination(existingVaccination);
@@ -72,6 +97,8 @@ public class VaccinationController {
             })
             .orElse(ResponseEntity.notFound().build());
     }
+
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('VET') or hasRole('ADMIN')")
