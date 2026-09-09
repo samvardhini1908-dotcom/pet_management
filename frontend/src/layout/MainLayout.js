@@ -35,10 +35,9 @@ const MainLayout = () => {
     navigate('/login');
   };
 
-  // Menu items mapping exactly to the routes and sidebar labels in your screenshots
   const menuItems = [
     {
-      key: '/',
+      key: '/dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
@@ -67,7 +66,6 @@ const MainLayout = () => {
       icon: <CalendarOutlined />,
       label: 'Appointments',
     },
-    // Admin / Shelter specific routes
     ...(role === 'ROLE_ADMIN' || !role
       ? [
           {
@@ -90,7 +88,7 @@ const MainLayout = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <Layout style={{ minHeight: '100vh', width: '100%' }}>
       {/* Top Navbar */}
       <Header
         style={{
@@ -114,7 +112,7 @@ const MainLayout = () => {
             gap: 12,
             cursor: 'pointer',
           }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
         >
           <div
             style={{
@@ -128,13 +126,7 @@ const MainLayout = () => {
               color: '#1677ff',
             }}
           >
-            {/* Paw Icon */}
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               <ellipse cx="8.5" cy="4.5" rx="1.8" ry="2.5" />
               <ellipse cx="15.5" cy="4.5" rx="1.8" ry="2.5" />
               <ellipse cx="4.5" cy="9.5" rx="1.8" ry="2.5" />
@@ -142,20 +134,12 @@ const MainLayout = () => {
               <path d="M12 9.5c-3.2 0-5.5 2.5-5.5 5.5 0 2.2 1.8 4 4 4 .5 0 1-.1 1.5-.4.5.3 1 .4 1.5.4 2.2 0 4-1.8 4-4 0-3-2.3-5.5-5.5-5.5z" />
             </svg>
           </div>
-
-          <span
-            style={{
-              fontSize: 22,
-              fontWeight: 800,
-              color: '#0f172a',
-              letterSpacing: '-0.5px',
-            }}
-          >
+          <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
             PetPulse
           </span>
         </div>
 
-        {/* Header Right User Label */}
+        {/* User Badge */}
         {user?.username && (
           <div style={{ fontSize: 14, color: '#64748b' }}>
             Logged in as <strong style={{ color: '#0f172a' }}>{user.username}</strong>
@@ -163,34 +147,25 @@ const MainLayout = () => {
         )}
       </Header>
 
-      {/* Main Body Layout */}
-      <Layout>
+      {/* Main App Body */}
+      <Layout style={{ minHeight: 'calc(100vh - 64px)' }}>
         {/* Sidebar */}
         <Sider
           width={220}
           style={{
             backgroundColor: '#ffffff',
             borderRight: '1px solid #e2e8f0',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
             <Menu
               mode="inline"
-              selectedKeys={[location.pathname]}
+              selectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
               onClick={({ key }) => navigate(key)}
               items={menuItems}
-              style={{
-                borderRight: 0,
-                marginTop: 12,
-                fontSize: 14,
-                fontWeight: 500,
-              }}
+              style={{ borderRight: 0, marginTop: 12, fontSize: 14, fontWeight: 500 }}
             />
 
-            {/* Logout Button in Sidebar */}
             <div style={{ padding: '16px 20px', marginBottom: 12 }}>
               <Button
                 danger
@@ -204,7 +179,6 @@ const MainLayout = () => {
                   fontWeight: 600,
                   backgroundColor: '#ff4d4f',
                   borderColor: '#ff4d4f',
-                  boxShadow: '0 2px 8px rgba(255, 77, 79, 0.25)',
                 }}
               >
                 Logout
@@ -213,8 +187,16 @@ const MainLayout = () => {
           </div>
         </Sider>
 
-        {/* Content Area */}
-        <Content style={{ backgroundColor: '#f8fafc', minHeight: 'calc(100vh - 64px)' }}>
+        {/* Content Area - Renders Child Pages */}
+        <Content
+          style={{
+            backgroundColor: '#f8fafc',
+            padding: 0,
+            margin: 0,
+            minHeight: '100%',
+            overflowY: 'auto',
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
