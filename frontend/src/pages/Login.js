@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
-import { UserOutlined, LockOutlined, HeartFilled } from '@ant-design/icons';
+import { Form, Input, Button, message } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../store/authSlice';
@@ -48,205 +48,169 @@ const Login = () => {
     <div
       style={{
         minHeight: '100vh',
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #eef2f6 0%, #e0e7ff 50%, #f8fafc 100%)',
-        padding: '20px',
+        backgroundColor: '#090d16',
+        backgroundImage: `
+          radial-gradient(at 15% 15%, rgba(24, 144, 255, 0.18) 0px, transparent 55%),
+          radial-gradient(at 85% 85%, rgba(114, 46, 209, 0.15) 0px, transparent 55%)
+        `,
+        padding: '24px',
+        boxSizing: 'border-box',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
       <div
         style={{
-          display: 'flex',
           width: '100%',
-          maxWidth: 920,
-          minHeight: 540,
-          backgroundColor: '#ffffff',
-          borderRadius: 24,
-          boxShadow: '0 20px 45px rgba(15, 23, 42, 0.08)',
-          overflow: 'hidden',
-          border: '1px solid #e2e8f0',
+          maxWidth: 420,
+          backgroundColor: 'rgba(17, 24, 39, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 20,
+          padding: '40px 36px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
         }}
       >
-        {/* Left Side: Visual Brand Hero Panel */}
-        <div
-          style={{
-            flex: 1,
-            background: 'linear-gradient(145deg, #1677ff 0%, #0958d9 60%, #003eb3 100%)',
-            padding: '48px 40px',
-            color: '#ffffff',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            position: 'relative',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <HeartFilled style={{ fontSize: 20, color: '#ffffff' }} />
-              </div>
-              <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
-                PetPulse
-              </span>
-            </div>
-
-            <h2
-              style={{
-                color: '#ffffff',
-                fontSize: 28,
-                fontWeight: 700,
-                lineHeight: 1.3,
-                marginBottom: 16,
-              }}
-            >
-              Intelligent Care for Every Companion.
-            </h2>
-            <p
-              style={{
-                color: '#bae0ff',
-                fontSize: 15,
-                lineHeight: 1.6,
-                maxWidth: 320,
-              }}
-            >
-              Real-time shelter capacity tracking, verified medical histories, and streamlined pet adoption.
-            </p>
-          </div>
-
+        {/* Brand Icon */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div
             style={{
-              padding: '16px 20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 52,
+              height: 52,
               borderRadius: 14,
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)',
+              boxShadow: '0 8px 20px rgba(24, 144, 255, 0.35)',
+              marginBottom: 18,
             }}
           >
-            <div style={{ fontSize: 13, color: '#e6f4ff', fontWeight: 600 }}>
-              🛡️ Role-Based Access Control
-            </div>
-            <div style={{ fontSize: 12, color: '#bae0ff', marginTop: 4 }}>
-              Protected administrative endpoints with Spring Security JWT tokens.
-            </div>
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
           </div>
+
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 26,
+              fontWeight: 700,
+              color: '#f8fafc',
+              letterSpacing: '-0.5px',
+            }}
+          >
+            Welcome Back
+          </h1>
+          <p
+            style={{
+              margin: '8px 0 0',
+              fontSize: 14,
+              color: '#94a3b8',
+              fontWeight: 400,
+            }}
+          >
+            Login to your PetPulse account
+          </p>
         </div>
 
-        {/* Right Side: Login Form */}
-        <div
-          style={{
-            flex: 1.15,
-            padding: '48px 44px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            backgroundColor: '#ffffff',
-          }}
+        {/* Form Controls */}
+        <Form
+          name="login_form"
+          layout="vertical"
+          onFinish={onFinish}
+          autoComplete="off"
+          requiredMark={false}
         >
-          <div style={{ marginBottom: 32, textAlign: 'left' }}>
-            <h1
+          <Form.Item
+            name="username"
+            rules={[{ required: true, message: 'Please enter your username' }]}
+            style={{ marginBottom: 18 }}
+          >
+            <Input
+              prefix={<UserOutlined style={{ color: '#64748b', marginRight: 6 }} />}
+              placeholder="Username"
               style={{
-                margin: 0,
-                fontSize: 28,
-                fontWeight: 700,
-                color: '#0f172a',
-                letterSpacing: '-0.5px',
+                height: 48,
+                borderRadius: 10,
+                backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                borderColor: '#334155',
+                color: '#f8fafc',
+                fontSize: 14,
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[{ required: true, message: 'Please enter your password' }]}
+            style={{ marginBottom: 26 }}
+          >
+            <Input.Password
+              prefix={<LockOutlined style={{ color: '#64748b', marginRight: 6 }} />}
+              placeholder="Password"
+              style={{
+                height: 48,
+                borderRadius: 10,
+                backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                borderColor: '#334155',
+                color: '#f8fafc',
+                fontSize: 14,
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 20 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              style={{
+                height: 48,
+                borderRadius: 10,
+                fontSize: 15,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+                border: 'none',
+                boxShadow: '0 8px 24px rgba(24, 144, 255, 0.3)',
+                cursor: 'pointer',
               }}
             >
-              Welcome Back
-            </h1>
-            <p style={{ margin: '8px 0 0', fontSize: 14, color: '#64748b' }}>
-              Login to your PetPulse account
-            </p>
+              Log in
+            </Button>
+          </Form.Item>
+
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ color: '#64748b', fontSize: 13 }}>
+              Don't have an account?{' '}
+            </span>
+            <Link
+              to="/register"
+              style={{
+                color: '#38bdf8',
+                fontWeight: 600,
+                fontSize: 13,
+                textDecoration: 'none',
+              }}
+            >
+              Register now!
+            </Link>
           </div>
-
-          <Form
-            name="login_form"
-            layout="vertical"
-            onFinish={onFinish}
-            autoComplete="off"
-            size="large"
-          >
-            <Form.Item
-              name="username"
-              rules={[{ required: true, message: 'Please enter your username' }]}
-              style={{ marginBottom: 20 }}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: '#94a3b8', marginRight: 4 }} />}
-                placeholder="Username"
-                style={{
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  backgroundColor: '#f8fafc',
-                  borderColor: '#e2e8f0',
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: 'Please enter your password' }]}
-              style={{ marginBottom: 28 }}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: '#94a3b8', marginRight: 4 }} />}
-                placeholder="Password"
-                style={{
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  backgroundColor: '#f8fafc',
-                  borderColor: '#e2e8f0',
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 18 }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                style={{
-                  height: 46,
-                  borderRadius: 10,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  boxShadow: '0 4px 14px rgba(22, 119, 255, 0.3)',
-                }}
-              >
-                Log in
-              </Button>
-            </Form.Item>
-
-            <div style={{ textAlign: 'center', marginTop: 12 }}>
-              <span style={{ color: '#64748b', fontSize: 14 }}>
-                Don't have an account?{' '}
-              </span>
-              <Link
-                to="/register"
-                style={{
-                  color: '#1677ff',
-                  fontWeight: 600,
-                  fontSize: 14,
-                }}
-              >
-                Register now!
-              </Link>
-            </div>
-          </Form>
-        </div>
+        </Form>
       </div>
     </div>
   );
