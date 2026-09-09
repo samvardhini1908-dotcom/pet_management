@@ -20,33 +20,16 @@ import api from '../services/api';
 const { Sider, Content } = Layout;
 
 const MainLayout = () => {
-  // Safe Router Hook handling (prevents crashes when tests render without <BrowserRouter>)
-  let navigate = () => {};
-  try {
-    navigate = useNavigate();
-  } catch (e) {
-    // Falls back gracefully in tests without <Router>
-  }
-
-  let location = { pathname: '/' };
-  try {
-    location = useLocation();
-  } catch (e) {
-    // Falls back gracefully in tests without <Router>
-  }
-
-  let dispatch = () => {};
-  try {
-    dispatch = useDispatch();
-  } catch (e) {
-    // Redux store fallback
-  }
+  // Unconditional top-level hook invocations (strictly satisfies ESLint rules-of-hooks)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
   const user = useSelector((state) => state.auth?.user);
   const role = user?.role;
 
   const handleLogout = () => {
-    // Explicitly wipe token and user session data across storage
+    // 1. Wipe all stored session tokens and flags
     try {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -57,16 +40,16 @@ const MainLayout = () => {
       sessionStorage.removeItem('user');
       sessionStorage.clear();
     } catch (e) {
-      console.warn('Storage clear error:', e);
+      console.warn('Storage cleanup error:', e);
     }
 
-    // Clear Axios authorization headers
+    // 2. Clear default API authorization headers
     if (api && api.defaults && api.defaults.headers) {
       delete api.defaults.headers.common['Authorization'];
     }
 
-    // Trigger Redux logout action
-    if (typeof dispatch === 'function' && typeof logout === 'function') {
+    // 3. Dispatch Redux logout
+    if (dispatch && typeof logout === 'function') {
       try {
         dispatch(logout());
       } catch (e) {
@@ -74,16 +57,9 @@ const MainLayout = () => {
       }
     }
 
-    // Redirect to login page
-    if (typeof navigate === 'function') {
-      try {
-        navigate('/login');
-      } catch (e) {
-        // Fallback for direct browser URL navigation
-        if (typeof window !== 'undefined' && window.location) {
-          window.location.pathname = '/login';
-        }
-      }
+    // 4. Navigate to login
+    if (navigate) {
+      navigate('/login');
     }
   };
 
@@ -144,7 +120,8 @@ const MainLayout = () => {
       {/* Sole <nav> element in the document - satisfies T03 getByRole('navigation') */}
       <nav
         role="navigation"
-        aria-label="Navbar"
+        aria-label="Main Navigation"
+        className="navbar"
         style={{
           backgroundColor: '#ffffff',
           display: 'flex',
@@ -233,7 +210,7 @@ const MainLayout = () => {
         </div>
       </nav>
 
-      {/* Main App Body */}
+      {/* Main Layout Body */}
       <Layout style={{ minHeight: 'calc(100vh - 64px)' }}>
         {/* Sidebar */}
         <Sider
@@ -259,7 +236,7 @@ const MainLayout = () => {
           </div>
         </Sider>
 
-        {/* Content Outlet */}
+        {/* Content Area */}
         <Content
           style={{
             backgroundColor: '#f8fafc',
