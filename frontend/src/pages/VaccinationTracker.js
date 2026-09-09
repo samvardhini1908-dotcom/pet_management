@@ -37,7 +37,7 @@ const VaccinationTracker = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // Load pets for dropdown selection
+  // 1. Fetch pets
   const fetchPets = useCallback(async () => {
     try {
       const res = await api.get('/pets');
@@ -47,7 +47,7 @@ const VaccinationTracker = () => {
     }
   }, []);
 
-  // Load all vaccinations
+  // 2. Fetch vaccination records
   const fetchVaccinations = useCallback(async () => {
     setLoading(true);
     try {
@@ -72,7 +72,7 @@ const VaccinationTracker = () => {
       status: 'PENDING',
       vaccinationDate: dayjs(),
       nextDueDate: dayjs().add(1, 'year'),
-      petName: pets.length > 0 ? pets[0].petName : undefined,
+      petId: pets.length > 0 ? pets[0].id : undefined,
     });
     setIsModalOpen(true);
   };
@@ -80,15 +80,14 @@ const VaccinationTracker = () => {
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
 
-    // Resolve name whether stored flat or inside pet relation
-    const currentName =
-      record.petName ||
-      record.pet?.petName ||
-      pets.find((p) => p.id === record.petId)?.petName ||
-      '';
+    // Resolve the actual pet ID from the record
+    const petId =
+      record.pet?.id ||
+      record.petId ||
+      pets.find((p) => p.petName === record.petName)?.id;
 
     form.setFieldsValue({
-      petName: currentName,
+      petId: petId,
       vaccineName: record.vaccineName,
       vaccinationDate: record.vaccinationDate ? dayjs(record.vaccinationDate) : null,
       nextDueDate: record.nextDueDate ? dayjs(record.nextDueDate) : null,
@@ -104,7 +103,13 @@ const VaccinationTracker = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    const selectedPetObj = pets.find((p) => p.petName === values.petName);
+    // Look up selected pet from our loaded pets list
+    const selectedPet = pets.find(
+      (p) => String(p.id) === String(values.petId) || p.petName === values.petId
+    );
+
+    const targetPetId = selectedPet ? selectedPet.id : values.petId;
+    const targetPetName = selectedPet ? selectedPet.petName : '';
 
     const vDate = values.vaccinationDate
       ? dayjs(values.vaccinationDate).format('YYYY-MM-DD')
@@ -113,20 +118,19 @@ const VaccinationTracker = () => {
       ? dayjs(values.nextDueDate).format('YYYY-MM-DD')
       : null;
 
-    // Send both petName (as string) AND pet / petId to satisfy any Spring Boot entity structure
+    // Send payload matching both Spring Boot JPA @ManyToOne and Flat fields
     const payload = {
       ...(editingRecord || {}),
-      petName: values.petName,
+      // Nested JPA entity (Standard Spring Boot requirement)
+      pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: targetPetId },
+      // Direct fields
+      petId: targetPetId,
+      petName: targetPetName,
       vaccineName: values.vaccineName,
       vaccinationDate: vDate,
       nextDueDate: nDate,
       status: values.status || 'PENDING',
     };
-
-    if (selectedPetObj) {
-      payload.petId = selectedPetObj.id;
-      payload.pet = { id: selectedPetObj.id, petName: selectedPetObj.petName };
-    }
 
     try {
       if (editingRecord) {
@@ -156,18 +160,29 @@ const VaccinationTracker = () => {
     }
   };
 
+  // Helper to reliably extract the pet name
+  const resolvePetName = (record) => {
+    if (record.pet?.petName) return record.pet.petName;
+    if (record.petName && record.petName !== '—') return record.petName;
+    
+    // Cross-reference with loaded pets state
+    const matched = pets.find(
+      (p) => String(p.id) === String(record.pet?.id || record.petId)
+    );
+    if (matched?.petName) return matched.petName;
+
+    return '—';
+  };
+
   const columns = [
     {
       title: 'Pet Name',
       key: 'petName',
-      render: (_, record) => {
-        const name =
-          record.petName ||
-          record.pet?.petName ||
-          pets.find((p) => p.id === record.petId)?.petName ||
-          '—';
-        return <span style={{ fontWeight: 600, color: '#0f172a' }}>{name}</span>;
-      },
+      render: (_, record) => (
+        <span style={{ fontWeight: 600, color: '#0f172a' }}>
+          {resolvePetName(record)}
+        </span>
+      ),
     },
     {
       title: 'Vaccine Name',
@@ -248,12 +263,7 @@ const VaccinationTracker = () => {
   const filteredVaccinations = vaccinations.filter((v) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const petName = (
-      v.petName ||
-      v.pet?.petName ||
-      pets.find((p) => p.id === v.petId)?.petName ||
-      ''
-    ).toLowerCase();
+    const petName = resolvePetName(v).toLowerCase();
     const vaccineName = (v.vaccineName || '').toLowerCase();
     return petName.includes(q) || vaccineName.includes(q);
   });
@@ -406,12 +416,12 @@ const VaccinationTracker = () => {
         >
           <Form.Item
             label="Pet"
-            name="petName"
+            name="petId"
             rules={[{ required: true, message: 'Please select a pet' }]}
           >
             <Select placeholder="Select a pet">
               {pets.map((pet) => (
-                <Option key={pet.id || pet.petName} value={pet.petName}>
+                <Option key={pet.id} value={pet.id}>
                   {pet.petName}
                 </Option>
               ))}
