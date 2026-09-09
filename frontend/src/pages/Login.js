@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -52,30 +52,23 @@ const Login = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#090d16',
-        backgroundImage: `
-          radial-gradient(at 15% 15%, rgba(24, 144, 255, 0.18) 0px, transparent 55%),
-          radial-gradient(at 85% 85%, rgba(114, 46, 209, 0.15) 0px, transparent 55%)
-        `,
+        backgroundColor: '#f8fafc',
         padding: '24px',
         boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div
+      <Card
+        bordered={false}
         style={{
           width: '100%',
           maxWidth: 420,
-          backgroundColor: 'rgba(17, 24, 39, 0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: 20,
-          padding: '40px 36px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+          borderRadius: 16,
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+          border: '1px solid #e2e8f0',
         }}
+        bodyStyle={{ padding: '40px 36px' }}
       >
-        {/* Brand Icon */}
+        {/* Brand Icon & Heading */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div
             style={{
@@ -85,31 +78,32 @@ const Login = () => {
               width: 52,
               height: 52,
               borderRadius: 14,
-              background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)',
-              boxShadow: '0 8px 20px rgba(24, 144, 255, 0.35)',
-              marginBottom: 18,
+              backgroundColor: '#e6f4ff',
+              color: '#1677ff',
+              marginBottom: 16,
             }}
           >
+            {/* Paw Print Icon */}
             <svg
-              width="26"
-              height="26"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              fill="currentColor"
             >
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              <ellipse cx="8.5" cy="4.5" rx="1.8" ry="2.5" />
+              <ellipse cx="15.5" cy="4.5" rx="1.8" ry="2.5" />
+              <ellipse cx="4.5" cy="9.5" rx="1.8" ry="2.5" />
+              <ellipse cx="19.5" cy="9.5" rx="1.8" ry="2.5" />
+              <path d="M12 9.5c-3.2 0-5.5 2.5-5.5 5.5 0 2.2 1.8 4 4 4 .5 0 1-.1 1.5-.4.5.3 1 .4 1.5.4 2.2 0 4-1.8 4-4 0-3-2.3-5.5-5.5-5.5z" />
             </svg>
           </div>
 
           <h1
             style={{
               margin: 0,
-              fontSize: 26,
+              fontSize: 24,
               fontWeight: 700,
-              color: '#f8fafc',
+              color: '#0f172a',
               letterSpacing: '-0.5px',
             }}
           >
@@ -117,9 +111,9 @@ const Login = () => {
           </h1>
           <p
             style={{
-              margin: '8px 0 0',
+              margin: '6px 0 0',
               fontSize: 14,
-              color: '#94a3b8',
+              color: '#64748b',
               fontWeight: 400,
             }}
           >
@@ -127,7 +121,7 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Form Controls */}
+        {/* Login Form */}
         <Form
           name="login_form"
           layout="vertical"
@@ -141,14 +135,12 @@ const Login = () => {
             style={{ marginBottom: 18 }}
           >
             <Input
-              prefix={<UserOutlined style={{ color: '#64748b', marginRight: 6 }} />}
+              prefix={<UserOutlined style={{ color: '#94a3b8', marginRight: 6 }} />}
               placeholder="Username"
               style={{
-                height: 48,
-                borderRadius: 10,
-                backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                borderColor: '#334155',
-                color: '#f8fafc',
+                height: 44,
+                borderRadius: 8,
+                borderColor: '#cbd5e1',
                 fontSize: 14,
               }}
             />
@@ -157,17 +149,15 @@ const Login = () => {
           <Form.Item
             name="password"
             rules={[{ required: true, message: 'Please enter your password' }]}
-            style={{ marginBottom: 26 }}
+            style={{ marginBottom: 24 }}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: '#64748b', marginRight: 6 }} />}
+              prefix={<LockOutlined style={{ color: '#94a3b8', marginRight: 6 }} />}
               placeholder="Password"
               style={{
-                height: 48,
-                borderRadius: 10,
-                backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                borderColor: '#334155',
-                color: '#f8fafc',
+                height: 44,
+                borderRadius: 8,
+                borderColor: '#cbd5e1',
                 fontSize: 14,
               }}
             />
@@ -180,14 +170,13 @@ const Login = () => {
               loading={loading}
               block
               style={{
-                height: 48,
-                borderRadius: 10,
+                height: 44,
+                borderRadius: 8,
                 fontSize: 15,
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
-                border: 'none',
-                boxShadow: '0 8px 24px rgba(24, 144, 255, 0.3)',
-                cursor: 'pointer',
+                backgroundColor: '#1677ff',
+                borderColor: '#1677ff',
+                boxShadow: '0 2px 4px rgba(22, 119, 255, 0.2)',
               }}
             >
               Log in
@@ -201,7 +190,7 @@ const Login = () => {
             <Link
               to="/register"
               style={{
-                color: '#38bdf8',
+                color: '#1677ff',
                 fontWeight: 600,
                 fontSize: 13,
                 textDecoration: 'none',
@@ -211,7 +200,7 @@ const Login = () => {
             </Link>
           </div>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 };
