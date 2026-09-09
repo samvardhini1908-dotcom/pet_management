@@ -8,17 +8,12 @@ import {
   Form,
   Input,
   Tag,
-  Badge,
   Spin,
   Empty,
   message,
 } from 'antd';
-import {
-  HeartOutlined,
-  HomeOutlined,
-  SearchOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+import { HeartOutlined } from '@ant-design/icons';
+import { useSelector } from 'react-redux';
 import api from '../services/api';
 
 const { Meta } = Card;
@@ -27,20 +22,26 @@ const { TextArea } = Input;
 const AdoptionCenter = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
+
+  // Get current logged-in user from Redux or localStorage
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const storedUser = localStorage.getItem('user')
+    ? JSON.parse(localStorage.getItem('user'))
+    : null;
+  const currentUser = reduxUser || storedUser;
 
   const fetchPets = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/pets');
       const petList = Array.isArray(response.data) ? response.data : [];
-      // Show pets that are flagged available or have a shelter attached
-      const available = petList.filter(
-        (p) => p.availableForAdoption !== false
-      );
+      // Include all pets that are available for adoption
+      const available = petList.filter((p) => p.availableForAdoption !== false);
       setPets(available);
     } catch (error) {
       message.error(error?.response?.data?.message || 'Failed to load adoption pets');
@@ -66,17 +67,42 @@ const AdoptionCenter = () => {
   };
 
   const handleFormSubmit = async (values) => {
+    if (!selectedPet) return;
+    setSubmitting(true);
+
+    const nowIso = new Date().toISOString().split('T')[0];
+
+    // Payload compatible with both flat fields and entity relations in Spring Boot
+    const payload = {
+      // Direct IDs
+      petId: selectedPet.id,
+      userId: currentUser?.id,
+
+      // Nested Entity mappings (common in JPA/Hibernate @ManyToOne)
+      pet: { id: selectedPet.id },
+      user: currentUser?.id ? { id: currentUser.id } : undefined,
+
+      // Text descriptions
+      reason: values.reason || values.notes,
+      notes: values.reason || values.notes,
+
+      // Status and dates
+      status: 'PENDING',
+      requestDate: nowIso,
+      applicationDate: nowIso,
+    };
+
     try {
-      const payload = {
-        petId: selectedPet.id,
-        notes: values.notes,
-        reason: values.reason || values.notes,
-        status: 'PENDING',
-      };
-      // Fallback route support if backend uses /adoption-requests
-      await api
-        .post('/adoptions', payload)
-        .catch(() => api.post('/adoption-requests', payload));
+      // Try primary route `/adoption-requests`, fallback to `/adoptions`
+      try {
+        await api.post('/adoption-requests', payload);
+      } catch (err) {
+        if (err?.response?.status === 404 || err?.response?.status === 405) {
+          await api.post('/adoptions', payload);
+        } else {
+          throw err;
+        }
+      }
 
       message.success('Adoption request submitted successfully');
       setIsModalOpen(false);
@@ -84,7 +110,14 @@ const AdoptionCenter = () => {
       form.resetFields();
       fetchPets();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to submit adoption request');
+      console.error('Adoption Submission Error:', error?.response || error);
+      message.error(
+        error?.response?.data?.message ||
+        error?.response?.data ||
+        'Failed to submit adoption request'
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -125,7 +158,7 @@ const AdoptionCenter = () => {
                 Adoption Center
               </h1>
               <Tag color="green" style={{ borderRadius: 12, padding: '2px 10px', fontWeight: 600 }}>
-                {pets.length} Pets Available
+                {pets.length} Available
               </Tag>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 14, color: '#64748b' }}>
@@ -240,6 +273,7 @@ const AdoptionCenter = () => {
         onCancel={handleCancelModal}
         onOk={() => form.submit()}
         okText="Submit Request"
+        confirmLoading={submitting}
         destroyOnClose
       >
         <Form
@@ -251,7 +285,7 @@ const AdoptionCenter = () => {
         >
           <Form.Item
             label="Reason for Adoption"
-            name="notes"
+            name="reason"
             rules={[{ required: true, message: 'Please share your reason for adopting' }]}
           >
             <TextArea
