@@ -27,6 +27,8 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPet, setEditingPet] = useState(null);
+  const [petNameValue, setPetNameValue] = useState('');
+  const [speciesValue, setSpeciesValue] = useState('Dog');
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
@@ -43,7 +45,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
     setLoading(true);
     try {
       const response = await api.get('/pets');
-      setPets(response.data || []);
+      setPets(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       message.error(error?.response?.data?.message || 'Failed to fetch pets');
     } finally {
@@ -57,20 +59,28 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
 
   const handleOpenCreateModal = () => {
     setEditingPet(null);
+    setPetNameValue('');
+    setSpeciesValue('Dog');
     form.resetFields();
     form.setFieldsValue({
       species: 'Dog',
+      age: 1,
     });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (record) => {
     setEditingPet(record);
+    const pName = record.petName || '';
+    const pSpecies = record.species || 'Dog';
+    setPetNameValue(pName);
+    setSpeciesValue(pSpecies);
+
     form.setFieldsValue({
-      petName: record.petName || '',
-      species: record.species || 'Dog',
+      petName: pName,
+      species: pSpecies,
       breed: record.breed || '',
-      age: record.age !== undefined && record.age !== null ? record.age : '',
+      age: record.age !== undefined && record.age !== null ? record.age : 0,
       gender: record.gender || '',
       imageUrl: record.imageUrl || '',
     });
@@ -84,32 +94,34 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   };
 
   const handleFormSubmit = async (values) => {
-    // 1. Clean Age conversion (null if empty, integer if present)
-    const ageVal = values.age;
-    const cleanAge =
-      ageVal !== undefined && ageVal !== '' && ageVal !== null
-        ? Number(ageVal)
-        : null;
+    // 1. Resolve petName and species
+    const finalPetName = values.petName || petNameValue || '';
+    const finalSpecies = values.species || speciesValue || 'Dog';
 
-    // 2. Clean Image URL (null if blank to avoid URL pattern validator issues)
-    const cleanImageUrl =
-      values.imageUrl && values.imageUrl.trim() !== ''
-        ? values.imageUrl.trim()
-        : null;
+    // 2. Resolve age: Backend requires @NotNull int age
+    const rawAge = values.age;
+    const finalAge =
+      rawAge !== undefined && rawAge !== '' && rawAge !== null
+        ? Number(rawAge)
+        : editingPet?.age !== undefined
+        ? editingPet.age
+        : 0;
 
-    // 3. Clean, flat DTO payload without recursive entity references
+    // 3. Build payload strictly adhering to Pet.java model
     const payload = {
-      petName: values.petName ? values.petName.trim() : '',
-      species: values.species || 'Dog',
-      breed: values.breed ? values.breed.trim() : '',
-      age: cleanAge,
-      gender: values.gender || editingPet?.gender || '',
-      imageUrl: cleanImageUrl,
+      ...(editingPet || {}),
+      petName: finalPetName.trim(),
+      species: finalSpecies,
+      breed: values.breed ? values.breed.trim() : (editingPet?.breed || ''),
+      age: finalAge,
+      gender: values.gender || editingPet?.gender || 'Unknown',
+      imageUrl: values.imageUrl ? values.imageUrl.trim() : (editingPet?.imageUrl || ''),
+      availableForAdoption: editingPet ? editingPet.availableForAdoption : true,
     };
 
-    if (editingPet?.id) {
-      payload.id = editingPet.id;
-    }
+    // Keep relations if present
+    if (editingPet?.shelter) payload.shelter = editingPet.shelter;
+    if (editingPet?.owner) payload.owner = editingPet.owner;
 
     try {
       if (editingPet) {
@@ -266,7 +278,6 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Directory Card */}
       <Card
         bordered={false}
         style={{
@@ -275,7 +286,6 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
         }}
         bodyStyle={{ padding: '24px 28px' }}
       >
-        {/* Header with Title, Tag, and Actions */}
         <div
           style={{
             display: 'flex',
@@ -329,7 +339,6 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
           </div>
         </div>
 
-        {/* Pets Table */}
         <Table
           rowKey="id"
           columns={columns}
@@ -342,7 +351,6 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
         />
       </Card>
 
-      {/* Pet Create / Edit Modal */}
       <Modal
         title={editingPet ? 'Edit Pet' : 'Create New Pet'}
         open={Boolean(isModalOpen)}
@@ -364,7 +372,12 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             name="petName"
             rules={[{ required: true, message: 'Please enter pet name' }]}
           >
-            <Input id="petName" placeholder="Enter pet name" />
+            <Input
+              id="petName"
+              placeholder="Enter pet name"
+              value={petNameValue}
+              onChange={(e) => setPetNameValue(e.target.value)}
+            />
           </Form.Item>
 
           <Form.Item
@@ -372,7 +385,12 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             name="species"
             rules={[{ required: true, message: 'Please select species' }]}
           >
-            <Select id="species" placeholder="Select species">
+            <Select
+              id="species"
+              placeholder="Select species"
+              value={speciesValue}
+              onChange={(val) => setSpeciesValue(val)}
+            >
               <Option value="Dog">Dog</Option>
               <Option value="Cat">Cat</Option>
               <Option value="Bird">Bird</Option>
@@ -384,7 +402,11 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             <Input placeholder="Enter breed" />
           </Form.Item>
 
-          <Form.Item label="Age" name="age">
+          <Form.Item
+            label="Age"
+            name="age"
+            rules={[{ required: true, message: 'Please enter age' }]}
+          >
             <Input type="number" min={0} placeholder="Enter age" />
           </Form.Item>
 
