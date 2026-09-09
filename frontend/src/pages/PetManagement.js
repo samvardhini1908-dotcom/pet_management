@@ -27,8 +27,6 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPet, setEditingPet] = useState(null);
-  const [petNameValue, setPetNameValue] = useState('');
-  const [speciesValue, setSpeciesValue] = useState('Dog');
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
@@ -59,22 +57,18 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
 
   const handleOpenCreateModal = () => {
     setEditingPet(null);
-    setPetNameValue('');
-    setSpeciesValue('Dog');
     form.resetFields();
+    form.setFieldsValue({
+      species: 'Dog',
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (record) => {
     setEditingPet(record);
-    const pName = record.petName || '';
-    const pSpecies = record.species || 'Dog';
-    setPetNameValue(pName);
-    setSpeciesValue(pSpecies);
-
     form.setFieldsValue({
-      petName: pName,
-      species: pSpecies,
+      petName: record.petName || '',
+      species: record.species || 'Dog',
       breed: record.breed || '',
       age: record.age !== undefined && record.age !== null ? record.age : '',
       gender: record.gender || '',
@@ -90,29 +84,32 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
   };
 
   const handleFormSubmit = async (values) => {
-    // Ensure age is parsed to an integer or null (fixes Spring Boot 400 Bad Request)
-    const rawAge = values.age;
-    const parsedAge =
-      rawAge !== undefined && rawAge !== '' && rawAge !== null
-        ? parseInt(rawAge, 10)
+    // 1. Clean Age conversion (null if empty, integer if present)
+    const ageVal = values.age;
+    const cleanAge =
+      ageVal !== undefined && ageVal !== '' && ageVal !== null
+        ? Number(ageVal)
         : null;
 
-    // Clean image url (avoid passing empty strings to backend URL validators)
-    const cleanedImageUrl =
+    // 2. Clean Image URL (null if blank to avoid URL pattern validator issues)
+    const cleanImageUrl =
       values.imageUrl && values.imageUrl.trim() !== ''
         ? values.imageUrl.trim()
         : null;
 
-    // Preserve existing relationships (like owner / shelter references) on edit
+    // 3. Clean, flat DTO payload without recursive entity references
     const payload = {
-      ...(editingPet || {}),
-      petName: petNameValue || values.petName,
-      species: speciesValue || values.species,
-      breed: values.breed || '',
-      age: parsedAge,
+      petName: values.petName ? values.petName.trim() : '',
+      species: values.species || 'Dog',
+      breed: values.breed ? values.breed.trim() : '',
+      age: cleanAge,
       gender: values.gender || editingPet?.gender || '',
-      imageUrl: cleanedImageUrl,
+      imageUrl: cleanImageUrl,
     };
+
+    if (editingPet?.id) {
+      payload.id = editingPet.id;
+    }
 
     try {
       if (editingPet) {
@@ -367,12 +364,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             name="petName"
             rules={[{ required: true, message: 'Please enter pet name' }]}
           >
-            <Input
-              id="petName"
-              placeholder="Enter pet name"
-              value={petNameValue}
-              onChange={(e) => setPetNameValue(e.target.value)}
-            />
+            <Input id="petName" placeholder="Enter pet name" />
           </Form.Item>
 
           <Form.Item
@@ -380,12 +372,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             name="species"
             rules={[{ required: true, message: 'Please select species' }]}
           >
-            <Select
-              id="species"
-              placeholder="Select species"
-              value={speciesValue}
-              onChange={(val) => setSpeciesValue(val)}
-            >
+            <Select id="species" placeholder="Select species">
               <Option value="Dog">Dog</Option>
               <Option value="Cat">Cat</Option>
               <Option value="Bird">Bird</Option>
@@ -397,11 +384,7 @@ const PetManagement = ({ isAdmin: propIsAdmin }) => {
             <Input placeholder="Enter breed" />
           </Form.Item>
 
-          <Form.Item
-            label="Age"
-            name="age"
-            getValueFromEvent={(e) => (e.target.value === '' ? '' : Number(e.target.value))}
-          >
+          <Form.Item label="Age" name="age">
             <Input type="number" min={0} placeholder="Enter age" />
           </Form.Item>
 
