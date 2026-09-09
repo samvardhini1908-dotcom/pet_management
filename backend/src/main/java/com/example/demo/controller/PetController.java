@@ -72,6 +72,39 @@ public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet) {
 
 
 
+    // @PutMapping("/{id}")
+    // @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
+    // public ResponseEntity<?> updatePet(@PathVariable Long id,@Valid @RequestBody Pet petDetails)
+    // {
+    //     Pet existingPet = petService.getPetById(id)
+    //     .orElseThrow(()->new RuntimeException("Pet not found"));
+
+    //     // if(!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId()))
+    //     // {
+    //     //     return ResponseEntity.badRequest().build();
+    //     // }
+    //     if (adoptionService != null)
+    //     {
+    //          if (!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId())) {
+    //         return ResponseEntity.badRequest().build();
+    // }
+    //     }
+
+    //     existingPet.setPetName(petDetails.getPetName());
+    //     existingPet.setSpecies(petDetails.getSpecies());
+    //     existingPet.setBreed(petDetails.getBreed());
+    //     existingPet.setAge(petDetails.getAge());
+    //     existingPet.setGender(petDetails.getGender());
+    //     existingPet.setImageUrl(petDetails.getImageUrl());
+    //     existingPet.setAvailableForAdoption(petDetails.isAvailableForAdoption());
+
+    //     petService.savePet(existingPet);
+
+    //     return ResponseEntity.ok("Pet updated successfully.");
+
+    // }
+
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('SHELTER') or hasRole('ADMIN')")
     public ResponseEntity<?> updatePet(@PathVariable Long id,@Valid @RequestBody Pet petDetails)
@@ -79,15 +112,11 @@ public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet) {
         Pet existingPet = petService.getPetById(id)
         .orElseThrow(()->new RuntimeException("Pet not found"));
 
-        // if(!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId()))
-        // {
-        //     return ResponseEntity.badRequest().build();
-        // }
-        if (adoptionService != null)
+        if (adoptionService != null && existingPet.getShelter() != null && existingPet.getShelter().getId() != null)
         {
-             if (!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId())) {
-            return ResponseEntity.badRequest().build();
-    }
+            if (!adoptionService.canShelterAcceptPet(existingPet.getShelter().getId())) {
+                return ResponseEntity.badRequest().build();
+            }
         }
 
         existingPet.setPetName(petDetails.getPetName());
@@ -101,7 +130,6 @@ public ResponseEntity<?> createPet(@Valid @RequestBody Pet pet) {
         petService.savePet(existingPet);
 
         return ResponseEntity.ok("Pet updated successfully.");
-
     }
 
     @DeleteMapping("/{id}")
