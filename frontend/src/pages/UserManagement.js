@@ -32,6 +32,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
   const fetchUsers = useCallback(async () => {
@@ -240,10 +241,19 @@ const UserManagement = () => {
     },
   ];
 
-  // Overview metric tallies
   const adminCount = users.filter((u) => u.role === 'ROLE_ADMIN').length;
   const vetCount = users.filter((u) => u.role === 'ROLE_VET').length;
   const ownerCount = users.filter((u) => u.role === 'ROLE_OWNER').length;
+
+  const filteredUsers = users.filter((u) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (u.username && u.username.toLowerCase().includes(q)) ||
+      (u.fullName && u.fullName.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
@@ -314,19 +324,47 @@ const UserManagement = () => {
         }}
         bodyStyle={{ padding: '24px' }}
       >
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-            System Users
-          </h2>
-          <span style={{ fontSize: 13, color: '#64748b' }}>
-            Manage platform accounts, role assignments, and member details.
-          </span>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: '1px solid #f1f5f9',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
+                User Management Directory
+              </h2>
+              <Tag color="blue" style={{ borderRadius: 12, padding: '1px 10px', fontWeight: 600 }}>
+                {users.length} Active Accounts
+              </Tag>
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+              Manage system permissions, vet credentials, and registered pet owner profiles
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Input.Search
+              placeholder="Search by username, name, email..."
+              allowClear
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: 280 }}
+            />
+          </div>
         </div>
 
         <Table
           rowKey="id"
           columns={columns}
-          dataSource={users}
+          dataSource={filteredUsers}
           loading={loading}
           pagination={{
             pageSize: 8,
