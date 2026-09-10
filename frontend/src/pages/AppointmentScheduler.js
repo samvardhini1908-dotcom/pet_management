@@ -409,7 +409,6 @@
 // };
 
 // export default AppointmentScheduler;
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
@@ -449,7 +448,7 @@ const AppointmentScheduler = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // 1. Fetch pets to resolve pet names and populate dropdown options
+  // 1. Fetch pets
   const fetchPets = useCallback(async () => {
     try {
       const res = await api.get('/pets');
@@ -492,12 +491,12 @@ const AppointmentScheduler = () => {
     return '—';
   };
 
-  // Helper to safely extract veterinarian name as string
+  // Helper to safely extract veterinarian name
   const resolveVetName = (val) => {
     if (!val) return 'Dr. Vet';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      return val.fullName || val.username || val.name || 'Dr. Vet';
+      return val.fullName || val.username || val.name || 'Doctor Vet';
     }
     return 'Dr. Vet';
   };
@@ -508,7 +507,7 @@ const AppointmentScheduler = () => {
     form.setFieldsValue({
       status: 'SCHEDULED',
       appointmentDate: dayjs().add(1, 'day'),
-      veterinarian: 'Dr. Vet',
+      veterinarian: 'Doctor Vet',
       petId: pets.length > 0 ? pets[0].id : undefined,
     });
     setIsModalOpen(true);
@@ -517,20 +516,19 @@ const AppointmentScheduler = () => {
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
 
-    // Resolve pet ID
     const resolvedPetId =
       record.pet?.id ||
       record.petId ||
       pets.find((p) => p.petName === resolvePetName(record))?.id ||
       (pets.length > 0 ? pets[0].id : undefined);
 
-    const rawDate = record.appointmentDate || record.dateTime || record.date;
+    const rawDate = record.appointmentDate || record.dateTime;
 
     form.setFieldsValue({
       petId: resolvedPetId,
-      veterinarian: resolveVetName(record.veterinarian || record.doctorName),
+      veterinarian: resolveVetName(record.veterinarian),
       appointmentDate: rawDate ? dayjs(rawDate) : null,
-      reason: record.reason || record.notes || '',
+      purpose: record.purpose || record.reason || '',
       status: record.status || 'SCHEDULED',
     });
 
@@ -544,67 +542,50 @@ const AppointmentScheduler = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    // 1. Locate selected pet
     const selectedPet = pets.find(
       (p) => String(p.id) === String(values.petId) || p.petName === values.petId
     );
 
     const targetPetId = selectedPet ? selectedPet.id : values.petId;
-    const targetPetName = selectedPet ? selectedPet.petName : '';
+    const isoDateTime = values.appointmentDate
+      ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
+      : null;
 
-    // 2. Format ISO 8601 for Spring Boot LocalDateTime and Date
-    const rawDate = values.appointmentDate;
-    const formattedIso = rawDate ? dayjs(rawDate).format('YYYY-MM-DDTHH:mm:ss') : null;
-    const formattedDateOnly = rawDate ? dayjs(rawDate).format('YYYY-MM-DD') : null;
-
-    // 3. Build comprehensive payload matching both relational and flat entities
+    // Build payload matching Backend Appointment.java
     const payload = {
-      ...(editingRecord || {}),
       id: editingRecord?.id,
-      pet: selectedPet
-        ? { id: selectedPet.id, petName: selectedPet.petName }
-        : { id: targetPetId },
-      petId: targetPetId,
-      petName: targetPetName,
-      veterinarian: values.veterinarian || 'Dr. Vet',
-      doctorName: values.veterinarian || 'Dr. Vet',
-      appointmentDate: formattedIso,
-      dateTime: formattedIso,
-      date: formattedDateOnly,
-      reason: values.reason,
-      notes: values.reason,
+      pet: selectedPet ? { id: selectedPet.id } : (targetPetId ? { id: targetPetId } : null),
+      appointmentDate: isoDateTime,
+      purpose: values.purpose,
+      reason: values.purpose,
       status: values.status || 'SCHEDULED',
+      veterinarian: editingRecord?.veterinarian && typeof editingRecord.veterinarian === 'object'
+        ? editingRecord.veterinarian
+        : null,
     };
 
     try {
       if (editingRecord) {
-        let updateSuccess = false;
+        let success = false;
         let lastError = null;
 
-        // Try standard PUT /appointments/{id}
+        // 1. Try PUT with body
         try {
           await api.put(`/appointments/${editingRecord.id}`, payload);
-          updateSuccess = true;
+          success = true;
         } catch (err1) {
           lastError = err1;
 
-          // Try POST /appointments/{id} or POST /appointments fallback
+          // 2. If rejected because backend strictly requires ?status= query parameter
           try {
-            await api.post(`/appointments/${editingRecord.id}`, payload);
-            updateSuccess = true;
+            await api.put(`/appointments/${editingRecord.id}?status=${values.status || 'SCHEDULED'}`);
+            success = true;
           } catch (err2) {
             lastError = err2;
-
-            try {
-              await api.post('/appointments', payload);
-              updateSuccess = true;
-            } catch (err3) {
-              lastError = err3;
-            }
           }
         }
 
-        if (!updateSuccess) {
+        if (!success) {
           throw lastError;
         }
 
@@ -640,24 +621,12 @@ const AppointmentScheduler = () => {
     } catch (err1) {
       lastError = err1;
 
-      // 2. Fallback: Check if backend uses soft-delete via status update to CANCELLED
-      if (typeof record === 'object') {
-        try {
-          await api.put(`/appointments/${id}`, {
-            ...record,
-            status: 'CANCELLED',
-          });
-          success = true;
-        } catch (err2) {
-          lastError = err2;
-
-          try {
-            await api.put(`/appointments/${id}/status?status=CANCELLED`);
-            success = true;
-          } catch (err3) {
-            lastError = err3;
-          }
-        }
+      // 2. Fallback to Spring Boot's updateStatus endpoint: ?status=CANCELLED
+      try {
+        await api.put(`/appointments/${id}?status=CANCELLED`);
+        success = true;
+      } catch (err2) {
+        lastError = err2;
       }
     }
 
@@ -666,11 +635,7 @@ const AppointmentScheduler = () => {
       fetchAppointments();
     } else {
       console.error('Appointment delete error:', lastError?.response || lastError);
-      const serverMsg =
-        lastError?.response?.data?.message ||
-        (typeof lastError?.response?.data === 'string' ? lastError.response.data : null) ||
-        'Failed to cancel appointment';
-      message.error(serverMsg);
+      message.error('Failed to cancel appointment');
     }
   };
 
@@ -712,7 +677,7 @@ const AppointmentScheduler = () => {
       key: 'veterinarian',
       render: (_, record) => (
         <span style={{ color: '#334155', fontWeight: 500 }}>
-          {resolveVetName(record.veterinarian || record.doctorName)}
+          {resolveVetName(record.veterinarian)}
         </span>
       ),
     },
@@ -720,7 +685,7 @@ const AppointmentScheduler = () => {
       title: 'Appointment Date',
       key: 'appointmentDate',
       render: (_, record) => {
-        const rawDate = record.appointmentDate || record.dateTime || record.date;
+        const rawDate = record.appointmentDate || record.dateTime;
         return (
           <span style={{ color: '#64748b' }}>
             {rawDate ? dayjs(rawDate).format('YYYY-MM-DD HH:mm') : '—'}
@@ -729,12 +694,11 @@ const AppointmentScheduler = () => {
       },
     },
     {
-      title: 'Reason',
-      dataIndex: 'reason',
-      key: 'reason',
-      render: (text) => (
+      title: 'Reason / Purpose',
+      key: 'purpose',
+      render: (_, record) => (
         <span style={{ color: '#64748b', maxWidth: 220, display: 'inline-block' }}>
-          {typeof text === 'string' ? text : '—'}
+          {record.purpose || record.reason || '—'}
         </span>
       ),
     },
@@ -781,9 +745,9 @@ const AppointmentScheduler = () => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const petName = resolvePetName(a).toLowerCase();
-    const vet = resolveVetName(a.veterinarian || a.doctorName).toLowerCase();
-    const reason = (typeof a.reason === 'string' ? a.reason : '').toLowerCase();
-    return petName.includes(q) || vet.includes(q) || reason.includes(q);
+    const vet = resolveVetName(a.veterinarian).toLowerCase();
+    const purpose = (a.purpose || a.reason || '').toLowerCase();
+    return petName.includes(q) || vet.includes(q) || purpose.includes(q);
   });
 
   const scheduledCount = appointments.filter(
@@ -833,7 +797,7 @@ const AppointmentScheduler = () => {
         </Col>
       </Row>
 
-      {/* Main Table Card */}
+      {/* Main Table */}
       <Card
         bordered={false}
         style={{ borderRadius: 14, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)' }}
@@ -933,8 +897,8 @@ const AppointmentScheduler = () => {
             rules={[{ required: true, message: 'Please enter veterinarian' }]}
           >
             <Select placeholder="Select veterinarian">
-              <Option value="Dr. Vet">Dr. Vet</Option>
               <Option value="Doctor Vet">Doctor Vet</Option>
+              <Option value="Dr. Vet">Dr. Vet</Option>
               <Option value="Dr. Sarah Johnson">Dr. Sarah Johnson</Option>
               <Option value="Dr. Michael Lee">Dr. Michael Lee</Option>
             </Select>
@@ -953,9 +917,9 @@ const AppointmentScheduler = () => {
           </Form.Item>
 
           <Form.Item
-            label="Reason"
-            name="reason"
-            rules={[{ required: true, message: 'Please provide a reason' }]}
+            label="Reason / Purpose"
+            name="purpose"
+            rules={[{ required: true, message: 'Please provide a reason or purpose' }]}
           >
             <TextArea rows={3} placeholder="Routine checkup, vaccinations, symptoms..." />
           </Form.Item>
