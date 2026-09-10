@@ -8,11 +8,10 @@ import {
   Select,
   DatePicker,
   Popconfirm,
+  Tag,
   Card,
   Row,
   Col,
-  Statistic,
-  Tag,
   message,
 } from 'antd';
 import {
@@ -32,50 +31,84 @@ const { TextArea } = Input;
 const AppointmentScheduler = () => {
   const [appointments, setAppointments] = useState([]);
   const [pets, setPets] = useState([]);
-  const [vets, setVets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
+  // 1. Fetch pets to populate dropdown and resolve accurate pet names
+  const fetchPets = useCallback(async () => {
+    try {
+      const res = await api.get('/pets');
+      setPets(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to load pets:', err);
+    }
+  }, []);
+
+  // 2. Fetch appointment records
+  const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const [apptRes, petsRes, vetsRes] = await Promise.all([
-        api.get('/appointments'),
-        api.get('/pets').catch(() => ({ data: [] })),
-        api.get('/auth/vets').catch(() => ({ data: [] })),
-      ]);
-      setAppointments(Array.isArray(apptRes.data) ? apptRes.data : []);
-      setPets(Array.isArray(petsRes.data) ? petsRes.data : []);
-      setVets(Array.isArray(vetsRes.data) ? vetsRes.data : []);
-    } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to fetch appointments');
+      const res = await api.get('/appointments');
+      setAppointments(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      message.error(err?.response?.data?.message || 'Failed to fetch appointments');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchPets();
+    fetchAppointments();
+  }, [fetchPets, fetchAppointments]);
 
-  const handleOpenAddModal = () => {
+  // Helper to reliably extract the pet name
+  const resolvePetName = (record) => {
+    if (record.pet?.petName) return record.pet.petName;
+    if (record.petName && record.petName !== '—') return record.petName;
+
+    const matched = pets.find(
+      (p) => String(p.id) === String(record.pet?.id || record.petId)
+    );
+    if (matched?.petName) return matched.petName;
+
+    return '—';
+  };
+
+  const handleOpenCreateModal = () => {
     setEditingRecord(null);
     form.resetFields();
+    form.setFieldsValue({
+      status: 'SCHEDULED',
+      appointmentDate: dayjs().add(1, 'day'),
+      veterinarian: 'Dr. Vet',
+      petId: pets.length > 0 ? pets[0].id : undefined,
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
+
+    // Resolve the accurate Pet ID matching the selected pet
+    const resolvedPetId =
+      record.pet?.id ||
+      record.petId ||
+      pets.find((p) => p.petName === record.petName || p.petName === record.pet?.petName)?.id;
+
+    const rawDate = record.appointmentDate || record.dateTime || record.date;
+
     form.setFieldsValue({
-      petId: record.pet?.id || record.petId,
-      vetId: record.vet?.id || record.vetId,
-      appointmentDate: record.appointmentDate ? dayjs(record.appointmentDate) : null,
-      reason: record.reason,
+      petId: resolvedPetId,
+      veterinarian: record.veterinarian || record.doctorName || 'Dr. Vet',
+      appointmentDate: rawDate ? dayjs(rawDate) : null,
+      reason: record.reason || record.notes || '',
       status: record.status || 'SCHEDULED',
     });
+
     setIsModalOpen(true);
   };
 
@@ -86,11 +119,32 @@ const AppointmentScheduler = () => {
   };
 
   const handleFormSubmit = async (values) => {
+    // Find the chosen pet object
+    const selectedPet = pets.find(
+      (p) => String(p.id) === String(values.petId) || p.petName === values.petId
+    );
+
+    const targetPetId = selectedPet ? selectedPet.id : values.petId;
+    const targetPetName = selectedPet ? selectedPet.petName : '';
+
+    // Convert date to strict ISO format (YYYY-MM-DDTHH:mm:ss) required by Spring Boot LocalDateTime
+    const formattedDateTime = values.appointmentDate
+      ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
+      : null;
+
+    // Construct entity payload satisfying JPA relationships
     const payload = {
-      ...values,
-      appointmentDate: values.appointmentDate
-        ? values.appointmentDate.format('YYYY-MM-DDTHH:mm:ss')
-        : null,
+      ...(editingRecord || {}),
+      pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: targetPetId },
+      petId: targetPetId,
+      petName: targetPetName,
+      veterinarian: values.veterinarian,
+      doctorName: values.veterinarian,
+      appointmentDate: formattedDateTime,
+      dateTime: formattedDateTime,
+      reason: values.reason,
+      notes: values.reason,
+      status: values.status || 'SCHEDULED',
     };
 
     try {
@@ -104,9 +158,14 @@ const AppointmentScheduler = () => {
       setIsModalOpen(false);
       setEditingRecord(null);
       form.resetFields();
-      fetchData();
+      fetchAppointments();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Operation failed');
+      console.error('Appointment submit error:', error?.response || error);
+      const serverMsg =
+        error?.response?.data?.message ||
+        (typeof error?.response?.data === 'string' ? error.response.data : null) ||
+        'Operation failed';
+      message.error(serverMsg);
     }
   };
 
@@ -114,59 +173,75 @@ const AppointmentScheduler = () => {
     try {
       await api.delete(`/appointments/${id}`);
       message.success('Appointment cancelled successfully');
-      fetchData();
+      fetchAppointments();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Failed to delete appointment');
+      message.error(error?.response?.data?.message || 'Failed to cancel appointment');
     }
   };
 
   const getStatusTag = (status) => {
-    const s = (status || '').toUpperCase();
+    const s = (status || 'SCHEDULED').toUpperCase();
     if (s === 'COMPLETED') {
-      return <Tag color="success" style={{ borderRadius: 12 }}>COMPLETED</Tag>;
+      return (
+        <Tag color="success" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+          COMPLETED
+        </Tag>
+      );
     }
     if (s === 'CANCELLED') {
-      return <Tag color="error" style={{ borderRadius: 12 }}>CANCELLED</Tag>;
+      return (
+        <Tag color="error" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+          CANCELLED
+        </Tag>
+      );
     }
-    return <Tag color="processing" style={{ borderRadius: 12 }}>SCHEDULED</Tag>;
+    return (
+      <Tag color="processing" style={{ borderRadius: 12, fontWeight: 600, padding: '2px 10px' }}>
+        SCHEDULED
+      </Tag>
+    );
   };
 
   const columns = [
     {
       title: 'Pet Name',
-      dataIndex: 'petName',
       key: 'petName',
-      render: (text, record) => (
+      render: (_, record) => (
         <span style={{ fontWeight: 600, color: '#0f172a' }}>
-          {text || record.pet?.petName || 'Bruno'}
+          {resolvePetName(record)}
         </span>
       ),
     },
     {
       title: 'Veterinarian',
-      dataIndex: 'vetName',
-      key: 'vetName',
-      render: (text, record) => (
-        <span style={{ color: '#334155' }}>
-          {text || record.vet?.fullName || record.vet?.username || 'Dr. Vet'}
+      key: 'veterinarian',
+      render: (_, record) => (
+        <span style={{ color: '#334155', fontWeight: 500 }}>
+          {record.veterinarian || record.doctorName || 'Dr. Vet'}
         </span>
       ),
     },
     {
-      title: 'Date & Time',
-      dataIndex: 'appointmentDate',
+      title: 'Appointment Date',
       key: 'appointmentDate',
-      render: (date) => (
-        <span style={{ color: '#64748b' }}>
-          {date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '—'}
-        </span>
-      ),
+      render: (_, record) => {
+        const rawDate = record.appointmentDate || record.dateTime;
+        return (
+          <span style={{ color: '#64748b' }}>
+            {rawDate ? dayjs(rawDate).format('YYYY-MM-DD HH:mm') : '—'}
+          </span>
+        );
+      },
     },
     {
       title: 'Reason',
       dataIndex: 'reason',
       key: 'reason',
-      render: (text) => <span style={{ color: '#475569' }}>{text || 'Checkup'}</span>,
+      render: (text) => (
+        <span style={{ color: '#64748b', maxWidth: 220, display: 'inline-block' }}>
+          {text || '—'}
+        </span>
+      ),
     },
     {
       title: 'Status',
@@ -178,7 +253,7 @@ const AppointmentScheduler = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <Button
             type="link"
             icon={<EditOutlined />}
@@ -207,54 +282,58 @@ const AppointmentScheduler = () => {
     },
   ];
 
-  const scheduledCount = appointments.filter((a) => a.status === 'SCHEDULED').length;
-
   const filteredAppointments = appointments.filter((a) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const petName = (a.petName || a.pet?.petName || '').toLowerCase();
+    const petName = resolvePetName(a).toLowerCase();
+    const vet = (a.veterinarian || a.doctorName || '').toLowerCase();
     const reason = (a.reason || '').toLowerCase();
-    return petName.includes(q) || reason.includes(q);
+    return petName.includes(q) || vet.includes(q) || reason.includes(q);
   });
+
+  const scheduledCount = appointments.filter(
+    (a) => (a.status || 'SCHEDULED').toUpperCase() === 'SCHEDULED'
+  ).length;
+
+  const completedCount = appointments.filter(
+    (a) => (a.status || '').toUpperCase() === 'COMPLETED'
+  ).length;
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
       {/* Metrics Row */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12}>
-          <Card
-            bordered={false}
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-              borderLeft: '4px solid #1890ff',
-            }}
-            bodyStyle={{ padding: '16px 20px' }}
-          >
-            <Statistic
-              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>TOTAL APPOINTMENTS</span>}
-              value={appointments.length}
-              prefix={<CalendarOutlined style={{ color: '#1890ff', marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
-            />
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #1677ff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <CalendarOutlined style={{ fontSize: 24, color: '#1677ff' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>TOTAL APPOINTMENTS</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{appointments.length}</div>
+              </div>
+            </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12}>
-          <Card
-            bordered={false}
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-              borderLeft: '4px solid #fa8c16',
-            }}
-            bodyStyle={{ padding: '16px 20px' }}
-          >
-            <Statistic
-              title={<span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>UPCOMING SCHEDULES</span>}
-              value={scheduledCount}
-              prefix={<ClockCircleOutlined style={{ color: '#fa8c16', marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, color: '#0f172a' }}
-            />
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <ClockCircleOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>SCHEDULED</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{scheduledCount}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #52c41a' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <CheckCircleOutlined style={{ fontSize: 24, color: '#52c41a' }} />
+              <div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>COMPLETED</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{completedCount}</div>
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>
@@ -262,10 +341,7 @@ const AppointmentScheduler = () => {
       {/* Main Table Card */}
       <Card
         bordered={false}
-        style={{
-          borderRadius: 14,
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-        }}
+        style={{ borderRadius: 14, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)' }}
         bodyStyle={{ padding: '24px 28px' }}
       >
         <div
@@ -286,7 +362,7 @@ const AppointmentScheduler = () => {
                 Appointment Scheduler
               </h2>
               <Tag color="blue" style={{ borderRadius: 12, padding: '1px 10px', fontWeight: 600 }}>
-                {appointments.length} Scheduled
+                {appointments.length} Total
               </Tag>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
@@ -305,13 +381,8 @@ const AppointmentScheduler = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleOpenAddModal}
-              style={{
-                borderRadius: 8,
-                fontWeight: 600,
-                height: 38,
-                padding: '0 18px',
-              }}
+              onClick={handleOpenCreateModal}
+              style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
             >
               Book Appointment
             </Button>
@@ -330,7 +401,7 @@ const AppointmentScheduler = () => {
         />
       </Card>
 
-      {/* Modal for Book / Edit */}
+      {/* Edit / Book Modal */}
       <Modal
         title={editingRecord ? 'Edit Appointment' : 'Book Appointment'}
         open={Boolean(isModalOpen)}
@@ -352,56 +423,54 @@ const AppointmentScheduler = () => {
             name="petId"
             rules={[{ required: true, message: 'Please select a pet' }]}
           >
-            <Select placeholder="Select pet">
-              {pets.map((p) => (
-                <Option key={p.id} value={p.id}>
-                  {p.petName}
+            <Select placeholder="Select a pet">
+              {pets.map((pet) => (
+                <Option key={pet.id} value={pet.id}>
+                  {pet.petName}
                 </Option>
               ))}
-              {pets.length === 0 && <Option value={1}>Bruno</Option>}
             </Select>
           </Form.Item>
 
           <Form.Item
             label="Veterinarian"
-            name="vetId"
-            rules={[{ required: true, message: 'Please select a veterinarian' }]}
+            name="veterinarian"
+            rules={[{ required: true, message: 'Please enter veterinarian' }]}
           >
-            <Select placeholder="Select vet">
-              {vets.map((v) => (
-                <Option key={v.id} value={v.id}>
-                  {v.fullName || v.username}
-                </Option>
-              ))}
-              {vets.length === 0 && <Option value={1}>Dr. Vet</Option>}
+            <Select placeholder="Select veterinarian">
+              <Option value="Dr. Vet">Dr. Vet</Option>
+              <Option value="Dr. Sarah Johnson">Dr. Sarah Johnson</Option>
+              <Option value="Dr. Michael Lee">Dr. Michael Lee</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            label="Appointment Date"
+            label="Appointment Date & Time"
             name="appointmentDate"
-            rules={[{ required: true, message: 'Please choose appointment date' }]}
+            rules={[{ required: true, message: 'Please select appointment date and time' }]}
           >
-            <DatePicker showTime style={{ width: '100%' }} />
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              format="YYYY-MM-DD HH:mm:ss"
+            />
           </Form.Item>
 
           <Form.Item
             label="Reason"
             name="reason"
-            rules={[{ required: true, message: 'Please state the reason' }]}
+            rules={[{ required: true, message: 'Please provide a reason' }]}
           >
-            <TextArea rows={2} placeholder="e.g. Annual vaccination checkup" />
+            <TextArea rows={3} placeholder="Routine checkup, vaccinations, symptoms..." />
           </Form.Item>
 
-          {editingRecord && (
-            <Form.Item label="Status" name="status">
-              <Select>
-                <Option value="SCHEDULED">SCHEDULED</Option>
-                <Option value="COMPLETED">COMPLETED</Option>
-                <Option value="CANCELLED">CANCELLED</Option>
-              </Select>
-            </Form.Item>
-          )}
+          <Form.Item label="Status" name="status">
+            <Select placeholder="Select status">
+              <Option value="SCHEDULED">SCHEDULED</Option>
+              <Option value="COMPLETED">COMPLETED</Option>
+              <Option value="CANCELLED">CANCELLED</Option>
+            </Select>
+          </Form.Item>
         </Form>
       </Modal>
     </div>
