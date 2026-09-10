@@ -449,7 +449,7 @@ const AppointmentScheduler = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // 1. Fetch pets to resolve pet names and populate the dropdown
+  // 1. Fetch pets to resolve pet names and populate dropdown
   const fetchPets = useCallback(async () => {
     try {
       const res = await api.get('/pets');
@@ -459,7 +459,7 @@ const AppointmentScheduler = () => {
     }
   }, []);
 
-  // 2. Fetch appointment records
+  // 2. Fetch appointments
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
@@ -477,7 +477,7 @@ const AppointmentScheduler = () => {
     fetchAppointments();
   }, [fetchPets, fetchAppointments]);
 
-  // Helper to reliably extract the pet name
+  // Helper to reliably extract pet name
   const resolvePetName = (record) => {
     if (!record) return '—';
     if (record.pet?.petName) return record.pet.petName;
@@ -492,7 +492,7 @@ const AppointmentScheduler = () => {
     return '—';
   };
 
-  // Helper to safely extract the vet name as a string (prevents Object as child error)
+  // Helper to safely extract veterinarian name
   const resolveVetName = (val) => {
     if (!val) return 'Dr. Vet';
     if (typeof val === 'string') return val;
@@ -517,11 +517,12 @@ const AppointmentScheduler = () => {
   const handleOpenEditModal = (record) => {
     setEditingRecord(record);
 
-    // Resolve pet ID
+    // Resolve accurate pet ID
     const resolvedPetId =
       record.pet?.id ||
       record.petId ||
-      pets.find((p) => p.petName === resolvePetName(record))?.id;
+      pets.find((p) => p.petName === resolvePetName(record))?.id ||
+      (pets.length > 0 ? pets[0].id : undefined);
 
     const rawDate = record.appointmentDate || record.dateTime || record.date;
 
@@ -543,7 +544,7 @@ const AppointmentScheduler = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    // Find matching pet
+    // Locate chosen pet object
     const selectedPet = pets.find(
       (p) => String(p.id) === String(values.petId) || p.petName === values.petId
     );
@@ -551,29 +552,26 @@ const AppointmentScheduler = () => {
     const targetPetId = selectedPet ? selectedPet.id : values.petId;
     const targetPetName = selectedPet ? selectedPet.petName : '';
 
-    // Convert date to standard ISO 8601 string (YYYY-MM-DDTHH:mm:ss)
-    const formattedDateTime = values.appointmentDate
+    const isoDateTime = values.appointmentDate
       ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
       : null;
 
-    // Retain existing vet object if backend requires user structure, or pass string
-    let vetPayload = values.veterinarian;
-    if (editingRecord?.veterinarian && typeof editingRecord.veterinarian === 'object') {
-      vetPayload = {
-        ...editingRecord.veterinarian,
-        fullName: values.veterinarian,
-      };
-    }
+    const dateOnly = values.appointmentDate
+      ? dayjs(values.appointmentDate).format('YYYY-MM-DD')
+      : null;
 
+    // Explicit entity payload avoiding null pet references from old records
     const payload = {
-      ...(editingRecord || {}),
+      id: editingRecord?.id,
+      // Pass both full entity reference and flat ID
       pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: targetPetId },
       petId: targetPetId,
       petName: targetPetName,
-      veterinarian: vetPayload,
-      doctorName: values.veterinarian,
-      appointmentDate: formattedDateTime,
-      dateTime: formattedDateTime,
+      veterinarian: values.veterinarian || 'Dr. Vet',
+      doctorName: values.veterinarian || 'Dr. Vet',
+      appointmentDate: isoDateTime,
+      dateTime: isoDateTime,
+      date: dateOnly,
       reason: values.reason,
       notes: values.reason,
       status: values.status || 'SCHEDULED',
@@ -592,7 +590,7 @@ const AppointmentScheduler = () => {
       form.resetFields();
       fetchAppointments();
     } catch (error) {
-      console.error('Appointment submit error:', error?.response || error);
+      console.error('Appointment save error:', error?.response || error);
       const serverMsg =
         error?.response?.data?.message ||
         (typeof error?.response?.data === 'string' ? error.response.data : null) ||
@@ -657,7 +655,7 @@ const AppointmentScheduler = () => {
       title: 'Appointment Date',
       key: 'appointmentDate',
       render: (_, record) => {
-        const rawDate = record.appointmentDate || record.dateTime;
+        const rawDate = record.appointmentDate || record.dateTime || record.date;
         return (
           <span style={{ color: '#64748b' }}>
             {rawDate ? dayjs(rawDate).format('YYYY-MM-DD HH:mm') : '—'}
@@ -770,7 +768,7 @@ const AppointmentScheduler = () => {
         </Col>
       </Row>
 
-      {/* Main Table */}
+      {/* Main Table Card */}
       <Card
         bordered={false}
         style={{ borderRadius: 14, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)' }}
