@@ -449,7 +449,7 @@ const AppointmentScheduler = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // 1. Fetch pets to resolve pet names and populate dropdown
+  // 1. Fetch pets to resolve pet names and populate dropdown options
   const fetchPets = useCallback(async () => {
     try {
       const res = await api.get('/pets');
@@ -492,7 +492,7 @@ const AppointmentScheduler = () => {
     return '—';
   };
 
-  // Helper to safely extract veterinarian name
+  // Helper to extract veterinarian name as string (guards against Object as child error)
   const resolveVetName = (val) => {
     if (!val) return 'Dr. Vet';
     if (typeof val === 'string') return val;
@@ -544,7 +544,7 @@ const AppointmentScheduler = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    // Locate chosen pet object
+    // 1. Locate selected pet
     const selectedPet = pets.find(
       (p) => String(p.id) === String(values.petId) || p.petName === values.petId
     );
@@ -552,26 +552,22 @@ const AppointmentScheduler = () => {
     const targetPetId = selectedPet ? selectedPet.id : values.petId;
     const targetPetName = selectedPet ? selectedPet.petName : '';
 
-    const isoDateTime = values.appointmentDate
-      ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
-      : null;
+    // 2. Strict ISO 8601 formatting for Spring Boot LocalDateTime
+    const rawDate = values.appointmentDate;
+    const formattedIso = rawDate ? dayjs(rawDate).format('YYYY-MM-DDTHH:mm:ss') : null;
+    const formattedDateOnly = rawDate ? dayjs(rawDate).format('YYYY-MM-DD') : null;
 
-    const dateOnly = values.appointmentDate
-      ? dayjs(values.appointmentDate).format('YYYY-MM-DD')
-      : null;
-
-    // Explicit entity payload avoiding null pet references from old records
+    // 3. Build comprehensive JPA payload
     const payload = {
       id: editingRecord?.id,
-      // Pass both full entity reference and flat ID
       pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: targetPetId },
       petId: targetPetId,
       petName: targetPetName,
       veterinarian: values.veterinarian || 'Dr. Vet',
       doctorName: values.veterinarian || 'Dr. Vet',
-      appointmentDate: isoDateTime,
-      dateTime: isoDateTime,
-      date: dateOnly,
+      appointmentDate: formattedIso,
+      dateTime: formattedIso,
+      date: formattedDateOnly,
       reason: values.reason,
       notes: values.reason,
       status: values.status || 'SCHEDULED',
@@ -579,18 +575,27 @@ const AppointmentScheduler = () => {
 
     try {
       if (editingRecord) {
-        await api.put(`/appointments/${editingRecord.id}`, payload);
+        try {
+          await api.put(`/appointments/${editingRecord.id}`, payload);
+        } catch (putErr) {
+          if (putErr?.response?.status === 404 || putErr?.response?.status === 405) {
+            await api.post(`/appointments/${editingRecord.id}`, payload);
+          } else {
+            throw putErr;
+          }
+        }
         message.success('Appointment updated successfully');
       } else {
         await api.post('/appointments', payload);
         message.success('Appointment booked successfully');
       }
+
       setIsModalOpen(false);
       setEditingRecord(null);
       form.resetFields();
       fetchAppointments();
     } catch (error) {
-      console.error('Appointment save error:', error?.response || error);
+      console.error('Appointment submit error:', error?.response || error);
       const serverMsg =
         error?.response?.data?.message ||
         (typeof error?.response?.data === 'string' ? error.response.data : null) ||
@@ -869,6 +874,7 @@ const AppointmentScheduler = () => {
           >
             <Select placeholder="Select veterinarian">
               <Option value="Dr. Vet">Dr. Vet</Option>
+              <Option value="Doctor Vet">Doctor Vet</Option>
               <Option value="Dr. Sarah Johnson">Dr. Sarah Johnson</Option>
               <Option value="Dr. Michael Lee">Dr. Michael Lee</Option>
             </Select>
