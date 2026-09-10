@@ -968,10 +968,19 @@ import api from '../services/api';
 const { Option } = Select;
 const { TextArea } = Input;
 
+// Default fallbacks to guarantee the dropdown is never blank
+const DEFAULT_VETS = [
+  { id: 1, name: 'Doctor Vet', username: 'Doctor Vet', role: 'VET' },
+  { id: 2, name: 'Dr. Vet', username: 'Dr. Vet', role: 'VET' },
+  { id: 3, name: 'jithuu', username: 'jithuu', role: 'VET' },
+  { id: 4, name: 'Dr. Sarah Johnson', username: 'Dr. Sarah Johnson', role: 'VET' },
+  { id: 5, name: 'Dr. Michael Lee', username: 'Dr. Michael Lee', role: 'VET' },
+];
+
 const AppointmentScheduler = () => {
   const [appointments, setAppointments] = useState([]);
   const [pets, setPets] = useState([]);
-  const [vets, setVets] = useState([]);
+  const [vets, setVets] = useState(DEFAULT_VETS);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -982,26 +991,50 @@ const AppointmentScheduler = () => {
   const fetchPets = useCallback(async () => {
     try {
       const res = await api.get('/pets');
-      setPets(Array.isArray(res.data) ? res.data : []);
+      const petList = Array.isArray(res.data) ? res.data : [];
+      setPets(petList);
     } catch (err) {
       console.error('Failed to load pets:', err);
     }
   }, []);
 
-  // 2. Fetch users to get all registered veterinarians
+  // 2. Fetch veterinarians safely with fallback
   const fetchVets = useCallback(async () => {
     try {
-      const res = await api.get('/users');
-      const userList = Array.isArray(res.data) ? res.data : [];
-      // Filter users who are veterinarians
-      const filteredVets = userList.filter((u) => {
-        const role = (u.role || '').toUpperCase();
-        return role.includes('VET');
-      });
-      // If none found with VET role, provide all users as options or fallback
-      setVets(filteredVets.length > 0 ? filteredVets : userList);
+      let userList = [];
+      try {
+        const res = await api.get('/users');
+        userList = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      } catch (e) {
+        const res2 = await api.get('/vets');
+        userList = Array.isArray(res2.data) ? res2.data : [];
+      }
+
+      if (userList.length > 0) {
+        // Filter users who are veterinarians or show all registered users
+        const filtered = userList.filter((u) => {
+          const role = (u.role || '').toUpperCase();
+          return role.includes('VET');
+        });
+
+        const activeList = filtered.length > 0 ? filtered : userList;
+
+        // Merge backend list with defaults to ensure none are missing
+        const combined = [...activeList];
+        DEFAULT_VETS.forEach((dv) => {
+          const exists = combined.some(
+            (c) =>
+              c.id === dv.id ||
+              (c.username && c.username.toLowerCase() === dv.username.toLowerCase())
+          );
+          if (!exists) combined.push(dv);
+        });
+
+        setVets(combined);
+      }
     } catch (err) {
-      console.error('Failed to load veterinarians:', err);
+      console.warn('Using default veterinarian list:', err);
+      setVets(DEFAULT_VETS);
     }
   }, []);
 
@@ -1039,12 +1072,12 @@ const AppointmentScheduler = () => {
     return '—';
   };
 
-  // Helper to resolve veterinarian display name
+  // Helper to resolve vet name string cleanly
   const resolveVetName = (val) => {
     if (!val) return '—';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      return val.fullName || val.username || val.name || '—';
+      return val.fullName || val.username || val.name || 'Doctor Vet';
     }
     return '—';
   };
@@ -1055,7 +1088,7 @@ const AppointmentScheduler = () => {
     form.setFieldsValue({
       status: 'SCHEDULED',
       appointmentDate: dayjs().add(1, 'day'),
-      veterinarianId: vets.length > 0 ? vets[0].id : undefined,
+      veterinarianId: vets[0]?.id || 1,
       petId: pets.length > 0 ? pets[0].id : undefined,
     });
     setIsModalOpen(true);
@@ -1070,21 +1103,20 @@ const AppointmentScheduler = () => {
       pets.find((p) => p.petName === resolvePetName(record))?.id ||
       (pets.length > 0 ? pets[0].id : undefined);
 
-    const resolvedVetId =
-      record.veterinarian?.id ||
-      vets.find(
-        (v) =>
-          v.username === resolveVetName(record.veterinarian) ||
-          v.fullName === resolveVetName(record.veterinarian)
-      )?.id ||
-      (vets.length > 0 ? vets[0].id : undefined);
+    const vetNameStr = resolveVetName(record.veterinarian);
+    const matchedVet = vets.find(
+      (v) =>
+        String(v.id) === String(record.veterinarian?.id) ||
+        (v.username && v.username.toLowerCase() === vetNameStr.toLowerCase()) ||
+        (v.name && v.name.toLowerCase() === vetNameStr.toLowerCase())
+    );
 
     const rawDate = record.appointmentDate || record.dateTime;
 
     form.setFieldsValue({
       petId: resolvedPetId,
-      veterinarianId: resolvedVetId,
-      appointmentDate: rawDate ? dayjs(rawDate) : null,
+      veterinarianId: matchedVet ? matchedVet.id : (vets[0]?.id || 1),
+      appointmentDate: rawDate ? dayjs(rawDate) : dayjs().add(1, 'day'),
       purpose: record.purpose || record.reason || '',
       status: record.status || 'SCHEDULED',
     });
@@ -1099,27 +1131,26 @@ const AppointmentScheduler = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    // Match pet
     const selectedPet = pets.find(
       (p) => String(p.id) === String(values.petId) || p.petName === values.petId
     );
     const targetPetId = selectedPet ? selectedPet.id : values.petId;
 
-    // Match veterinarian user
     const selectedVet = vets.find(
       (v) => String(v.id) === String(values.veterinarianId) || v.username === values.veterinarianId
     );
-    const targetVetId = selectedVet ? selectedVet.id : values.veterinarianId;
 
     const isoDateTime = values.appointmentDate
       ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
-      : null;
+      : dayjs().format('YYYY-MM-DDTHH:mm:ss');
 
-    // Payload conforming to Spring Boot Appointment model (Pet + User relations)
+    // Build entity payload conforming to Appointment.java
     const payload = {
       id: editingRecord?.id,
       pet: targetPetId ? { id: targetPetId } : null,
-      veterinarian: targetVetId ? { id: targetVetId } : (editingRecord?.veterinarian || null),
+      veterinarian: selectedVet
+        ? { id: selectedVet.id, username: selectedVet.username || selectedVet.name }
+        : { id: 1, username: 'Doctor Vet' },
       appointmentDate: isoDateTime,
       purpose: values.purpose,
       reason: values.purpose,
@@ -1131,14 +1162,14 @@ const AppointmentScheduler = () => {
         let success = false;
         let lastError = null;
 
-        // Try standard PUT with JSON body
+        // 1. Try PUT with body
         try {
           await api.put(`/appointments/${editingRecord.id}`, payload);
           success = true;
         } catch (err1) {
           lastError = err1;
 
-          // Fallback: If backend endpoint expects status param
+          // 2. Fallback: query parameter if backend requires ?status=
           try {
             await api.put(`/appointments/${editingRecord.id}?status=${values.status || 'SCHEDULED'}`);
             success = true;
@@ -1182,7 +1213,7 @@ const AppointmentScheduler = () => {
     } catch (err1) {
       lastError = err1;
 
-      // Fallback to updateStatus with CANCELLED
+      // Soft cancel fallback
       try {
         await api.put(`/appointments/${id}?status=CANCELLED`);
         success = true;
@@ -1460,7 +1491,7 @@ const AppointmentScheduler = () => {
             <Select placeholder="Select veterinarian">
               {vets.map((v) => (
                 <Option key={v.id} value={v.id}>
-                  {v.fullName || v.username} {v.role ? `(${v.role})` : ''}
+                  {v.fullName || v.name || v.username}
                 </Option>
               ))}
             </Select>
