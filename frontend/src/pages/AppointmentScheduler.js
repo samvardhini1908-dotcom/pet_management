@@ -1005,22 +1005,30 @@ import api from '../services/api';
 const { Option } = Select;
 const { TextArea } = Input;
 
+// Always-present default doctor
+const DEFAULT_DOCTOR = {
+  id: 'default-vet',
+  fullName: 'Doctor Vet',
+  username: 'Doctor Vet',
+  role: 'VET',
+};
+
 const AppointmentScheduler = () => {
   const [appointments, setAppointments] = useState([]);
   const [pets, setPets] = useState([]);
-  const [vets, setVets] = useState([]);
+  const [vets, setVets] = useState([DEFAULT_DOCTOR]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // Helper to safely extract vet's real name string
+  // Helper to extract clean veterinarian name string
   const resolveVetName = (val) => {
     if (!val) return '—';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      return val.fullName || val.username || val.name || '—';
+      return val.fullName || val.username || val.name || 'Doctor Vet';
     }
     return '—';
   };
@@ -1051,48 +1059,56 @@ const AppointmentScheduler = () => {
     }
   }, []);
 
-  // 2. Fetch real veterinarians directly from database
+  // 2. Fetch veterinarians and prepend the default doctor
   const fetchVets = useCallback(async () => {
     try {
-      let userList = [];
+      let rawUsers = [];
       try {
         const res = await api.get('/users');
-        userList = Array.isArray(res.data) ? res.data : (res.data?.content || []);
-      } catch (e) {
+        rawUsers = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      } catch (err1) {
         try {
           const res2 = await api.get('/vets');
-          userList = Array.isArray(res2.data) ? res2.data : (res2.data?.content || []);
-        } catch (e2) {
-          userList = [];
+          rawUsers = Array.isArray(res2.data) ? res2.data : (res2.data?.content || []);
+        } catch (err2) {
+          rawUsers = [];
         }
       }
 
-      if (Array.isArray(userList) && userList.length > 0) {
-        // Filter users who are veterinarians (supports VET, ROLE_VET, etc.)
-        const vetUsers = userList.filter((u) => {
-          const roleStr = String(u.role || '').toUpperCase();
-          const rolesArr = Array.isArray(u.roles)
-            ? u.roles.map((r) => String(r.name || r).toUpperCase())
-            : [];
-          const auths = Array.isArray(u.authorities)
-            ? u.authorities.map((a) => String(a.authority || a).toUpperCase())
-            : [];
+      // Filter for users matching vet roles
+      const matchedVets = rawUsers.filter((u) => {
+        const roleStr = String(u.role || '').toUpperCase();
+        const rolesArr = Array.isArray(u.roles)
+          ? u.roles.map((r) => String(r.name || r).toUpperCase())
+          : [];
+        const auths = Array.isArray(u.authorities)
+          ? u.authorities.map((a) => String(a.authority || a).toUpperCase())
+          : [];
 
-          return (
-            roleStr.includes('VET') ||
-            rolesArr.some((r) => r.includes('VET')) ||
-            auths.some((a) => a.includes('VET'))
-          );
-        });
+        return (
+          roleStr.includes('VET') ||
+          rolesArr.some((r) => r.includes('VET')) ||
+          auths.some((a) => a.includes('VET'))
+        );
+      });
 
-        // If specific VETs found, use them; otherwise use all users
-        setVets(vetUsers.length > 0 ? vetUsers : userList);
-      } else {
-        setVets([]);
-      }
+      const activeList = matchedVets.length > 0 ? matchedVets : rawUsers;
+
+      // Ensure default doctor is at the top, followed by newly created vets
+      const mergedList = [DEFAULT_DOCTOR];
+      activeList.forEach((u) => {
+        const isDuplicate =
+          String(u.id) === String(DEFAULT_DOCTOR.id) ||
+          resolveVetName(u).toLowerCase() === DEFAULT_DOCTOR.fullName.toLowerCase();
+        if (!isDuplicate) {
+          mergedList.push(u);
+        }
+      });
+
+      setVets(mergedList);
     } catch (err) {
-      console.error('Failed to load veterinarians:', err);
-      setVets([]);
+      console.warn('Could not refresh veterinarians from backend, using default doctor:', err);
+      setVets([DEFAULT_DOCTOR]);
     }
   }, []);
 
@@ -1116,7 +1132,7 @@ const AppointmentScheduler = () => {
     fetchAppointments();
   }, [fetchPets, fetchVets, fetchAppointments]);
 
-  // Open Create Modal - reloads latest vets so new ones appear immediately
+  // Open Create Modal
   const handleOpenCreateModal = async () => {
     setEditingRecord(null);
     form.resetFields();
@@ -1126,7 +1142,7 @@ const AppointmentScheduler = () => {
     form.setFieldsValue({
       status: 'SCHEDULED',
       appointmentDate: dayjs().add(1, 'day'),
-      veterinarianId: undefined,
+      veterinarianId: DEFAULT_DOCTOR.id,
       petId: pets.length > 0 ? pets[0].id : undefined,
     });
     setIsModalOpen(true);
@@ -1143,20 +1159,18 @@ const AppointmentScheduler = () => {
       pets.find((p) => p.petName === resolvePetName(record))?.id ||
       undefined;
 
-    const currentVetId =
-      record.veterinarian?.id ||
-      vets.find(
-        (v) =>
-          v.username === resolveVetName(record.veterinarian) ||
-          v.fullName === resolveVetName(record.veterinarian)
-      )?.id ||
-      undefined;
+    const currentVetName = resolveVetName(record.veterinarian);
+    const matchedVet = vets.find(
+      (v) =>
+        String(v.id) === String(record.veterinarian?.id) ||
+        resolveVetName(v).toLowerCase() === currentVetName.toLowerCase()
+    );
 
     const rawDate = record.appointmentDate || record.dateTime;
 
     form.setFieldsValue({
       petId: resolvedPetId,
-      veterinarianId: currentVetId,
+      veterinarianId: matchedVet ? matchedVet.id : DEFAULT_DOCTOR.id,
       appointmentDate: rawDate ? dayjs(rawDate) : dayjs().add(1, 'day'),
       purpose: record.purpose || record.reason || '',
       status: record.status || 'SCHEDULED',
@@ -1178,25 +1192,31 @@ const AppointmentScheduler = () => {
     const targetPetId = selectedPet ? selectedPet.id : values.petId;
 
     const selectedVet = vets.find(
-      (v) => String(v.id) === String(values.veterinarianId) || v.username === values.veterinarianId
+      (v) => String(v.id) === String(values.veterinarianId) || resolveVetName(v) === values.veterinarianId
     );
-    const targetVetId = selectedVet ? selectedVet.id : values.veterinarianId;
 
     const isoDateTime = values.appointmentDate
       ? dayjs(values.appointmentDate).format('YYYY-MM-DDTHH:mm:ss')
       : dayjs().format('YYYY-MM-DDTHH:mm:ss');
 
-    // Strict payload binding to Appointment entity
+    // If default doctor is chosen and doesn't exist as a DB ID, check if a DB user exists named "Doctor Vet"
+    let vetEntity = null;
+    if (selectedVet && selectedVet.id !== DEFAULT_DOCTOR.id) {
+      vetEntity = { id: selectedVet.id, username: selectedVet.username || selectedVet.fullName };
+    } else {
+      // Find matching DB user for Doctor Vet if present, or assign fallback
+      const dbDoctorVet = vets.find(
+        (v) => v.id !== DEFAULT_DOCTOR.id && resolveVetName(v).toLowerCase() === 'doctor vet'
+      );
+      vetEntity = dbDoctorVet
+        ? { id: dbDoctorVet.id, username: dbDoctorVet.username }
+        : (editingRecord?.veterinarian || { id: 1, username: 'Doctor Vet' });
+    }
+
     const payload = {
       id: editingRecord?.id,
       pet: targetPetId ? { id: targetPetId } : null,
-      veterinarian: targetVetId
-        ? {
-            id: targetVetId,
-            username: selectedVet?.username,
-            fullName: selectedVet?.fullName,
-          }
-        : null,
+      veterinarian: vetEntity,
       appointmentDate: isoDateTime,
       purpose: values.purpose,
       reason: values.purpose,
@@ -1392,7 +1412,7 @@ const AppointmentScheduler = () => {
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Metrics Row */}
+      {/* Metric Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
           <Card bordered={false} style={{ borderRadius: 12, borderLeft: '4px solid #1677ff' }}>
@@ -1429,7 +1449,7 @@ const AppointmentScheduler = () => {
         </Col>
       </Row>
 
-      {/* Main Table Card */}
+      {/* Main Table */}
       <Card
         bordered={false}
         style={{ borderRadius: 14, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)' }}
@@ -1528,13 +1548,10 @@ const AppointmentScheduler = () => {
             name="veterinarianId"
             rules={[{ required: true, message: 'Please select a veterinarian' }]}
           >
-            <Select
-              placeholder={vets.length === 0 ? 'No veterinarians available' : 'Select veterinarian'}
-              notFoundContent="No veterinarians registered"
-            >
+            <Select placeholder="Select veterinarian">
               {vets.map((v) => (
                 <Option key={v.id} value={v.id}>
-                  {v.fullName || v.username} {v.role ? `(${v.role})` : ''}
+                  {resolveVetName(v)} {v.role && v.id !== DEFAULT_DOCTOR.id ? `(${v.role})` : ''}
                 </Option>
               ))}
             </Select>
