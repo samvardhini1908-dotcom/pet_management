@@ -972,7 +972,7 @@ const { TextArea } = Input;
 const DEFAULT_VETS = [
   { id: 1, name: 'Doctor Vet', username: 'Doctor Vet', role: 'VET' },
   { id: 2, name: 'Dr. Vet', username: 'Dr. Vet', role: 'VET' },
-  { id: 3, name: 'jithuu', username: 'jithuu', role: 'VET' },
+  { id: 3, name: 'Dr. Jith', username: 'jithuu', role: 'VET' },
   { id: 4, name: 'Dr. Sarah Johnson', username: 'Dr. Sarah Johnson', role: 'VET' },
   { id: 5, name: 'Dr. Michael Lee', username: 'Dr. Michael Lee', role: 'VET' },
 ];
