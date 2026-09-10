@@ -103,7 +103,7 @@ const VaccinationTracker = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    // Look up selected pet from our loaded pets list
+    // Look up selected pet from loaded pets list
     const selectedPet = pets.find(
       (p) => String(p.id) === String(values.petId) || p.petName === values.petId
     );
@@ -118,12 +118,10 @@ const VaccinationTracker = () => {
       ? dayjs(values.nextDueDate).format('YYYY-MM-DD')
       : null;
 
-    // Send payload matching both Spring Boot JPA @ManyToOne and Flat fields
+    // Send payload matching both Spring Boot JPA @ManyToOne and flat fields
     const payload = {
       ...(editingRecord || {}),
-      // Nested JPA entity (Standard Spring Boot requirement)
       pet: selectedPet ? { id: selectedPet.id, petName: selectedPet.petName } : { id: targetPetId },
-      // Direct fields
       petId: targetPetId,
       petName: targetPetName,
       vaccineName: values.vaccineName,
@@ -164,7 +162,7 @@ const VaccinationTracker = () => {
   const resolvePetName = (record) => {
     if (record.pet?.petName) return record.pet.petName;
     if (record.petName && record.petName !== '—') return record.petName;
-    
+
     // Cross-reference with loaded pets state
     const matched = pets.find(
       (p) => String(p.id) === String(record.pet?.id || record.petId)
@@ -268,8 +266,11 @@ const VaccinationTracker = () => {
     return petName.includes(q) || vaccineName.includes(q);
   });
 
+  // Filter out COMPLETED records so completed vaccines don't trigger reminders
   const upcomingReminders = vaccinations.filter((v) => {
-    if (!v.nextDueDate) return false;
+    const isCompleted = (v.status || '').toUpperCase() === 'COMPLETED';
+    if (isCompleted || !v.nextDueDate) return false;
+
     const due = dayjs(v.nextDueDate);
     const now = dayjs();
     const diffDays = due.diff(now, 'day');
