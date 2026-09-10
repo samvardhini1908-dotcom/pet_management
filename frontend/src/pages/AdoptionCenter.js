@@ -35,7 +35,7 @@ const getDefaultImage = (species) => {
     return 'https://images.unsplash.com/photo-1522926197415-e55c22c88c71?auto=format&fit=crop&w=600&q=80';
   }
 
-  // "Other" / unknown: SVG Paw print graphic on clean soft-blue background
+  // "Other" / unknown: SVG Paw print graphic
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="%23e6f4ff"/><g fill="%231677ff" transform="translate(160, 85) scale(3.5)"><ellipse cx="8.5" cy="4.5" rx="1.8" ry="2.5"/><ellipse cx="15.5" cy="4.5" rx="1.8" ry="2.5"/><ellipse cx="4.5" cy="9.5" rx="1.8" ry="2.5"/><ellipse cx="19.5" cy="9.5" rx="1.8" ry="2.5"/><path d="M12 9.5c-3.2 0-5.5 2.5-5.5 5.5 0 2.2 1.8 4 4 4 .5 0 1-.1 1.5-.4.5.3 1 .4 1.5.4 2.2 0 4-1.8 4-4 0-3-2.3-5.5-5.5-5.5z"/></g></svg>`;
 };
 
@@ -48,17 +48,30 @@ const AdoptionCenter = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
+  // Get current user safely from Redux or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
-  const storedUser = localStorage.getItem('user')
-    ? JSON.parse(localStorage.getItem('user'))
-    : null;
+  let storedUser = null;
+  try {
+    storedUser = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user'))
+      : null;
+  } catch (e) {
+    storedUser = null;
+  }
+
   const currentUser = reduxUser || storedUser;
 
   const fetchPets = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/pets');
-      const petList = Array.isArray(response.data) ? response.data : [];
+      // First attempt dedicated adoption endpoint, fallback to /pets
+      let res;
+      try {
+        res = await api.get('/pets/adoption');
+      } catch (e) {
+        res = await api.get('/pets');
+      }
+      const petList = Array.isArray(res.data) ? res.data : [];
       const available = petList.filter((p) => p.availableForAdoption !== false);
       setPets(available);
     } catch (error) {
@@ -89,28 +102,46 @@ const AdoptionCenter = () => {
     setSubmitting(true);
 
     const nowIso = new Date().toISOString().split('T')[0];
+    const userId = currentUser?.id || currentUser?.userId;
 
+    // Comprehensive payload matching various Spring Boot Adoption models
     const payload = {
       petId: selectedPet.id,
-      userId: currentUser?.id,
       pet: { id: selectedPet.id },
-      user: currentUser?.id ? { id: currentUser.id } : undefined,
-      reason: values.reason || values.notes,
-      notes: values.reason || values.notes,
+      reason: values.reason,
+      notes: values.reason,
       status: 'PENDING',
       requestDate: nowIso,
       applicationDate: nowIso,
+      adoptionDate: nowIso,
     };
 
+    if (userId) {
+      payload.userId = userId;
+      payload.user = { id: userId };
+    }
+
     try {
+      // Try standard adoption endpoints in succession
+      let response;
+      let errorOccurred = null;
+
       try {
-        await api.post('/adoption-requests', payload);
-      } catch (err) {
-        if (err?.response?.status === 404 || err?.response?.status === 405) {
-          await api.post('/adoptions', payload);
+        response = await api.post('/adoptions', payload);
+      } catch (err1) {
+        if (err1?.response?.status === 404 || err1?.response?.status === 405) {
+          try {
+            response = await api.post('/adoption-requests', payload);
+          } catch (err2) {
+            errorOccurred = err2;
+          }
         } else {
-          throw err;
+          errorOccurred = err1;
         }
+      }
+
+      if (errorOccurred && !response) {
+        throw errorOccurred;
       }
 
       message.success('Adoption request submitted successfully');
@@ -120,11 +151,11 @@ const AdoptionCenter = () => {
       fetchPets();
     } catch (error) {
       console.error('Adoption Submission Error:', error?.response || error);
-      message.error(
+      const serverMsg =
         error?.response?.data?.message ||
-        error?.response?.data ||
-        'Failed to submit adoption request'
-      );
+        (typeof error?.response?.data === 'string' ? error.response.data : null) ||
+        'Failed to submit adoption request';
+      message.error(serverMsg);
     } finally {
       setSubmitting(false);
     }
@@ -142,7 +173,7 @@ const AdoptionCenter = () => {
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Header Banner */}
+      {/* Header Card */}
       <Card
         bordered={false}
         style={{
@@ -187,7 +218,7 @@ const AdoptionCenter = () => {
         </div>
       </Card>
 
-      {/* Grid of Adoptable Pets */}
+      {/* Pet Grid */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
           <Spin size="large" />
@@ -270,7 +301,7 @@ const AdoptionCenter = () => {
         </Row>
       )}
 
-      {/* Modal for Adoption Request */}
+      {/* Adoption Request Modal */}
       <Modal
         title={`Adopt ${selectedPet?.petName || 'Pet'}`}
         open={Boolean(isModalOpen)}
